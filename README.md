@@ -11,6 +11,20 @@ O objetivo da primeira semana é **criar um parser robusto** para validar e carr
 - **[RESUMO_SEMANA_1.md](RESUMO_SEMANA_1.md)** — Visão geral do que foi feito, estrutura de projeto, próximos passos.
 - **[SPRINT_6_DAYS_PARSER.md](SPRINT_6_DAYS_PARSER.md)** — Guia detalhado dia a dia com cronograma, testes e debug.
 
+### Clonagem (com Submodules)
+
+```bash
+# Opção 1: Clone com submodule já inicializado
+git clone --recurse-submodules https://github.com/joaopedrogiancolidev/42-Cube3D.git
+
+# Opção 2: Clone normal, depois inicialize
+git clone https://github.com/joaopedrogiancolidev/42-Cube3D.git
+cd 42-Cube3D
+git submodule update --init --recursive
+```
+
+> **Nota**: MLX42 é um git submodule — ele será clonado automaticamente com `--recurse-submodules`.
+
 ### Quick Start
 
 ```bash
