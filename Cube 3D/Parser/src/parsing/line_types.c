@@ -96,3 +96,14 @@ int is_map_line(char *line)
     DBG_LINE("is_map_line", line, result);
     return (result);
 }
+
+const char	*line_type_name(char *line)
+{
+	if (is_empty_line(line))
+		return ("EMPTY");
+	if (is_element_line(line))
+		return ("ELEMENT");
+	if (is_map_line(line))
+		return ("MAP");
+	return ("INVALID");
+}

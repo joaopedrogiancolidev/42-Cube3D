@@ -1,24 +1,16 @@
 #include "parser.h"
 
-static const char	*line_type_name(char *line)
+static void	print_visual_separator(void)
 {
-	if (is_empty_line(line))
-		return ("EMPTY");
-	if (is_element_line(line))
-		return ("ELEMENT");
-	if (is_map_line(line))
-		return ("MAP");
-	return ("INVALID");
+       ft_printf("\n----PARSER ERROR MANAGER:----\n\n");
 }
 
 int	main(int argc, char **argv)
 {
-	char	*line;
-	char	*line_type;
 	int		fd;
 	int		has_invalid;
-	int		line_no;
 
+       print_visual_separator();
 	if (argc != 2)
 	{
 		ft_printf("Usage: ./parser_demo <map.cub>\n");
@@ -30,22 +22,7 @@ int	main(int argc, char **argv)
 		ft_printf("Error: could not open file: %s\n", argv[1]);
 		return (1);
 	}
-	has_invalid = 0;
-	line_no = 1;
-	line = get_next_line(fd);
-	while (line)
-	{
-		line_type = (char *)line_type_name(line);
-		if (ft_strncmp(line_type, "INVALID", 8) == 0)
-		{
-			has_invalid = 1;
-			ft_printf("Error: invalid line at %d\n", line_no);
-		}
-		ft_printf("line[%d] %s | %s", line_no, line_type, line);
-		free(line);
-		line = get_next_line(fd);
-		line_no++;
-	}
+	has_invalid = classify_file_lines(fd);
 	close(fd);
 	if (has_invalid)
 		return (1);
