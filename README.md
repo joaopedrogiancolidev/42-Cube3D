@@ -2,14 +2,10 @@
 
 Implementação didática de um raycaster 3D usando MLX42, seguindo a estrutura e regras da escola 42.
 
-## Semana 1: Parser (10/03 - 15/03/2026)
+## Parser:
 
-O objetivo da primeira semana é **criar um parser robusto** para validar e carregar mapas `.cub`.
+O objetivo é **criar um parser robusto** para validar e carregar mapas `.cub`.
 
-### Documentos Importantes
-
-- **[RESUMO_SEMANA_1.md](RESUMO_SEMANA_1.md)** — Visão geral do que foi feito, estrutura de projeto, próximos passos.
-- **[SPRINT_6_DAYS_PARSER.md](SPRINT_6_DAYS_PARSER.md)** — Guia detalhado dia a dia com cronograma, testes e debug.
 
 ### Clonagem (com Submodules)
 
@@ -29,12 +25,11 @@ git submodule update --init --recursive
 
 ```bash
 cd 'Cube 3D/Parser'
-make                           # Build
+make                            # Build
 make debug                      # Build with debug output
-make visual                     # Build with MLX viewer
+make re                         # Rebuild from scratch
 
 ./parser_demo ../sample_maps/valid_minimal.cub
-./visual_demo ../sample_maps/valid_minimal.cub
 ```
 
 ### Estrutura
@@ -43,7 +38,7 @@ make visual                     # Build with MLX viewer
 Cube 3D/
 ├── Parser/                 # Protótipo de parser (semana 1)
 │   ├── includes/          # Headers
-│   ├── src/               # Sources (parsing, utils, visual)
+│   ├── src/               # Sources (parsing)
 │   ├── Makefile
 │   └── obj/              # Build artifacts
 ├── sample_maps/           # Mapas de teste
@@ -59,7 +54,7 @@ Cube 3D/
 
 ## Próximos Passos
 
-1. **Completar Parser (6 dias)** → Ver SPRINT_6_DAYS_PARSER.md
+1. **Completar Parser (6 dias)** → Ver PARSER_DEV_GUIDE.md
 2. **Raycasting Loop** → Integrar DDA e ray-wall collision
 3. **Render com Texturas** → Carregar NO/SO/WE/EA e mapear na tela
 4. **Controles** → WASD + setas para mover e rodar
@@ -68,11 +63,10 @@ Cube 3D/
 ## Notas de Desenvolvimento
 
 - Use `make debug` para ativar prints internos
-- Use `make visual` para abrir visualizador 2D do mapa
+- Use `make re` para rebuild limpo
 - Compile frequentemente: `make` → teste → refatore
 - Estude o arquivo `.cub` antes de parsear
 - Leia o código anterior antes de escrever novo
 
 ---
 
-*Sprint iniciado: 10/03/2026*

@@ -21,6 +21,14 @@
   - `missing required element 'X'`
   - `element after map started at line N`
 
+### Dia 3 ✅ Extração e normalização do mapa
+- Bloco de mapa separado durante o parse.
+- Grade retangular montada com preenchimento por espaço.
+- Largura máxima calculada por `get_max_map_width`.
+- Debug de normalização ativo em build debug:
+  - `[MAP GRID] width=... height=...`
+  - `[MAP i] |...|`
+
 ---
 
 ## ⚡ Comandos Essenciais (Terminal)
@@ -49,7 +57,11 @@ for f in \
   ../sample_maps/spawn_colors_demo.cub \
   ../sample_maps/invalid_duplicate_element.cub \
   ../sample_maps/invalid_missing_element.cub \
-  ../sample_maps/invalid_element_after_map.cub; do
+  ../sample_maps/invalid_element_after_map.cub \
+  ../sample_maps/ragged_valid.cub \
+  ../sample_maps/leading_spaces_valid.cub \
+  ../sample_maps/mixed_width_valid.cub \
+  ../sample_maps/tab_in_map_invalid.cub; do
   echo "--- $f ---"
   ./parser_demo "$f"
   echo "EXIT:$?"
@@ -65,6 +77,27 @@ done
 ./parser_demo ../sample_maps/invalid_element_after_map.cub ; echo "EXIT:$?"
 ```
 
+### Testes focados do Dia 3 (normalização do mapa)
+
+```bash
+./parser_demo ../sample_maps/ragged_valid.cub ; echo "EXIT:$?"
+./parser_demo ../sample_maps/leading_spaces_valid.cub ; echo "EXIT:$?"
+./parser_demo ../sample_maps/mixed_width_valid.cub ; echo "EXIT:$?"
+./parser_demo ../sample_maps/tab_in_map_invalid.cub ; echo "EXIT:$?"
+```
+
+Esperado:
+- `ragged_valid.cub` -> `EXIT:0`
+- `leading_spaces_valid.cub` -> `EXIT:0`
+- `mixed_width_valid.cub` -> `EXIT:0`
+- `tab_in_map_invalid.cub` -> `EXIT:1` (linha inválida no mapa)
+
+Com `make -s debug`, além do log por linha, o parser também imprime:
+- `[MAP GRID] width=... height=...`
+- `[MAP i] |...|`
+
+Isso permite validar visualmente se a normalização preservou o layout do arquivo.
+
 ---
 
 ## ✅ Checklist rápido (10 min)
@@ -78,11 +111,16 @@ Use este roteiro sempre antes de encerrar sessão:
   - `./parser_demo ../sample_maps/invalid_duplicate_element.cub ; echo "EXIT:$?"`
   - `./parser_demo ../sample_maps/invalid_missing_element.cub ; echo "EXIT:$?"`
   - `./parser_demo ../sample_maps/invalid_element_after_map.cub ; echo "EXIT:$?"`
-5. Confirmar resultado esperado:
+5. Validar Dia 3 (normalização):
+  - `./parser_demo ../sample_maps/ragged_valid.cub ; echo "EXIT:$?"`
+  - `./parser_demo ../sample_maps/leading_spaces_valid.cub ; echo "EXIT:$?"`
+  - `./parser_demo ../sample_maps/mixed_width_valid.cub ; echo "EXIT:$?"`
+  - `./parser_demo ../sample_maps/tab_in_map_invalid.cub ; echo "EXIT:$?"`
+6. Confirmar resultado esperado:
   - válido: `EXIT:0`
   - inválidos: `EXIT:1` com mensagem clara
 
-Se esse checklist passar, a base do Dia 2 está consistente.
+Se esse checklist passar, a base do Dia 3 está consistente.
 
 ---
 
@@ -133,6 +171,22 @@ Esperado: `EXIT:1` + `missing required element ...`
 
 Esperado: `EXIT:1` + `element after map started ...`
 
+### Teste 5 — Normalização de linhas com tamanhos diferentes
+
+```bash
+./parser_demo ../sample_maps/mixed_width_valid.cub ; echo "EXIT:$?"
+```
+
+Esperado: `EXIT:0` + logs `[MAP GRID]` e `[MAP i]` preservando layout.
+
+### Teste 6 — Tab no bloco de mapa
+
+```bash
+./parser_demo ../sample_maps/tab_in_map_invalid.cub ; echo "EXIT:$?"
+```
+
+Esperado: `EXIT:1` + `invalid line ...`
+
 ---
 
 ## ✅ Resultado esperado dos mapas atuais
@@ -146,6 +200,10 @@ Esperado: `EXIT:1` + `element after map started ...`
 | `invalid_duplicate_element.cub` | `EXIT:1` |
 | `invalid_missing_element.cub` | `EXIT:1` |
 | `invalid_element_after_map.cub` | `EXIT:1` |
+| `ragged_valid.cub` | `EXIT:0` |
+| `leading_spaces_valid.cub` | `EXIT:0` |
+| `mixed_width_valid.cub` | `EXIT:0` |
+| `tab_in_map_invalid.cub` | `EXIT:1` |
 
 ---
 
@@ -158,6 +216,7 @@ Cube 3D/Parser/
 │   ├── parsing.h
 │   ├── parser_config.h
 │   ├── elements.h
+│   ├── map_grid.h
 │   ├── parser_errors.h
 │   └── debug.h
 └── src/
@@ -168,6 +227,8 @@ Cube 3D/Parser/
         ├── config/parser_config.c
         ├── elements/elements_parse.c
         ├── elements/elements_validate.c
+    ├── map/map_grid_utils.c
+    ├── map/map_extract.c
         └── utils/parser_errors.c
 ```
 
@@ -178,7 +239,10 @@ main_parser.c
   -> load_file_lines(fd)
       -> line_type_name()
       -> parse_element_line()
+  -> add_map_line()
       -> validate_required_elements()
+  -> extract_map_grid()
+  -> free_map_grid()
       -> free_parser_config()
 ```
 
@@ -196,7 +260,7 @@ main_parser.c
 - **Entregas:** estrutura de config + detecção de duplicado/faltando.
 - **Critério de pronto:** arquivo válido carrega config completa; inválidos dão erro claro.
 
-### Dia 3 — Extração e normalização do mapa
+### Dia 3 — Extração e normalização do mapa ✅
 - **Meta:** separar bloco de mapa e montar grade retangular com preenchimento por espaço.
 - **Entregas:** `extract_map_grid`, cálculo de largura máxima, cópia preservando layout.
 - **Critério de pronto:** mapa “como no arquivo” representado corretamente em memória.
@@ -220,17 +284,38 @@ main_parser.c
 
 ## 🔎 Observação de debug (Dia 2)
 
-Sim, existe debug útil para o Dia 2:
+Sim, existe debug útil para Dia 2 e Dia 3:
 - `[DEBUG] is_*` para classificação.
 - `[LINE N] TYPE | conteúdo` para visão por linha.
+- `[MAP GRID] width=... height=...` após normalização.
+- `[MAP i] |...|` para inspecionar cada linha da grade final.
 - Mensagens claras de erro de elementos.
+
+---
+
+## ✅ Dia 3 Consolidado
+
+**Status:** Pronto para entrega
+
+**O que foi entregue:**
+- Módulo `map_grid` com estrutura `t_map_grid` (lines, height, width)
+- Acumulação de linhas do mapa durante parsing (preservando layout original)
+- Normalização para grade retangular com preenchimento por espaço
+- Debug visual: `[MAP GRID] width=... height=...` + `[MAP i] |...|`
+- 4 sample maps de validação (ragged, leading_spaces, mixed_width, tab_invalid)
+
+**Validação:**
+- Build: `make -s debug` ✅
+- Todos os 8 sample maps (Dia 2 + Dia 3) retornam `EXIT:0` ou `EXIT:1` conforme esperado
+- Debug output mostra normalização corretamente para cada mapa
+- Comentários explicativos adicionados a cada arquivo do módulo map
 
 ---
 
 ## Próximo foco recomendado
 
-Iniciar **Dia 3** com duas funções centrais:
-1. `extract_map_grid`
-2. `get_max_map_width`
+Iniciar **Dia 4** com duas validações centrais:
+1. charset final do mapa normalizado (`0`, `1`, `N`, `S`, `E`, `W`, espaço)
+2. exatamente 1 spawn no mapa
 
-Depois, adicionar casos de teste com linhas de tamanhos diferentes e espaços internos.
+Depois, adicionar sample maps de erro específico (ex.: `two_spawns_invalid.cub`).
