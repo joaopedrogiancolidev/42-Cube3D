@@ -6,7 +6,7 @@
 /*   By: arthur <arthur@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/18 17:12:10 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/19 13:26:49 by arthur           ###   ########.fr       */
+/*   Updated: 2026/03/19 14:37:59 by arthur           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 # include "image.h"
 # include <stdint.h>
 # include "raycasting.h"
+#include <math.h>
 
 typedef struct s_image_cube
 {
@@ -61,14 +62,7 @@ typedef struct s_raycast
 	double moveSpeed;
 	double rotSpeed;
 	double oldDirX;
-	double oldPlaneX;
-	
-	
-	
-	
-	
-	
-	
+	double oldPlaneX;	
 } t_raycast;
 
 typedef struct s_cube_data
@@ -78,9 +72,6 @@ typedef struct s_cube_data
 	int		map_height;
 	int		win_width;
 	int		win_height;
-	float	player_x;
-	float	player_y;
-	float	player_angle;
 	t_image_cube image_cube;
 	t_raycast raycast;
 	mlx_t*	mlx;

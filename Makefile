@@ -13,9 +13,7 @@ SRCS    := $(shell find src -type f -name "*.c")
 
 # 2. Mapeia src/caminho/arquivo.c para obj/caminho/arquivo.o (Preservando a estrutura)
 OBJS    := $(SRCS:src/%.c=$(OBJDIR)/%.o)
-
 all: libmlx $(NAME)
-
 libmlx:
 	@if [ ! -d "$(LIBMLX)/build" ]; then \
 		cmake $(LIBMLX) -B $(LIBMLX)/build; \
