@@ -22,7 +22,7 @@ int	main(int argc, char **argv)
 		ft_printf("Error: could not open file: %s\n", argv[1]);
 		return (1);
 	}
-	has_invalid = classify_file_lines(fd);
+       has_invalid = load_file_lines(fd);
 	close(fd);
 	if (has_invalid)
 		return (1);

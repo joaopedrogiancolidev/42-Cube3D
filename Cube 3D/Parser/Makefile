@@ -6,8 +6,12 @@ INCLUDES = -Iincludes -I../../libft
 SRC_DIR = src
 OBJ_DIR = obj
 SRCS = $(SRC_DIR)/main_parser.c \
-	$(SRC_DIR)/parsing/line_types.c \
-	$(SRC_DIR)/parsing/read_lines.c
+	$(SRC_DIR)/parsing/types/line_types.c \
+	$(SRC_DIR)/parsing/reader/read_lines.c \
+	$(SRC_DIR)/parsing/config/parser_config.c \
+	$(SRC_DIR)/parsing/elements/elements_parse.c \
+	$(SRC_DIR)/parsing/elements/elements_validate.c \
+	$(SRC_DIR)/parsing/utils/parser_errors.c
 OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 LIBFT_DIR = ../../libft
 LIBFT = $(LIBFT_DIR)/libft.a

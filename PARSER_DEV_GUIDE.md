@@ -1,229 +1,236 @@
-# Parser Development Guide - Quick Reference
+# Parser Development Guide — Atualizado
 
-**Last Updated:** 2026-03-18  
-**Current Branch:** `parser`  
-**Last Commit:** `19e284b` - "refactor: clean up parser debug macros and add visual separator"
+**Last Updated:** 2026-03-19  
+**Branch:** `parser`
 
 ---
 
-## ⚡ Quick Start (Copy-Paste)
+## 🎯 Escopo Atual (o que já está pronto)
+
+### Dia 1 ✅ Base de leitura estável
+- Leitura linha a linha funcionando via `get_next_line`.
+- Classificação inicial funcionando: `EMPTY`, `ELEMENT`, `MAP`, `INVALID`.
+- Funções entregues: `load_file_lines`, `is_empty_line`, `is_map_line`, `is_element_line`.
+- Critério validado: debug imprime tipo detectado por linha.
+
+### Dia 2 ✅ Parse de elementos
+- Parse de `NO/SO/WE/EA/F/C` com ordem livre.
+- Estrutura de config ativa e validações de duplicado/faltando.
+- Erros claros implementados:
+  - `duplicate element 'X' at line N`
+  - `missing required element 'X'`
+  - `element after map started at line N`
+
+---
+
+## ⚡ Comandos Essenciais (Terminal)
 
 ```bash
 cd "/home/deck/Desktop/Github_Projetcs/42/Cube3D/Cube 3D/Parser"
 
-# Clean build + test (normal mode - shows only errors)
-make -s re && ./parser_demo ../sample_maps/invalid_char.cub ; echo "EXIT:$?"
+# Build normal (sem debug de linha)
+make -s re
 
-# Clean build + test (debug mode - shows detailed logs)
-make -s debug && ./parser_demo ../sample_maps/invalid_char.cub ; echo "EXIT:$?"
+# Build debug (com [DEBUG] e [LINE N])
+make -s debug
 
-# Test all maps
-for f in ../sample_maps/*.cub; do echo "=== $f ==="; ./parser_demo "$f"; echo "EXIT:$?"; echo; done
+# Smoke test rápido
+./parser_demo ../sample_maps/valid_minimal.cub ; echo "EXIT:$?"
+```
+
+### Bateria completa (recomendada)
+
+```bash
+make -s debug && \
+for f in \
+  ../sample_maps/valid_minimal.cub \
+  ../sample_maps/invalid_char.cub \
+  ../sample_maps/invalid_open.cub \
+  ../sample_maps/spawn_colors_demo.cub \
+  ../sample_maps/invalid_duplicate_element.cub \
+  ../sample_maps/invalid_missing_element.cub \
+  ../sample_maps/invalid_element_after_map.cub; do
+  echo "--- $f ---"
+  ./parser_demo "$f"
+  echo "EXIT:$?"
+  echo
+done
+```
+
+### Testes focados do Dia 2
+
+```bash
+./parser_demo ../sample_maps/invalid_duplicate_element.cub ; echo "EXIT:$?"
+./parser_demo ../sample_maps/invalid_missing_element.cub ; echo "EXIT:$?"
+./parser_demo ../sample_maps/invalid_element_after_map.cub ; echo "EXIT:$?"
 ```
 
 ---
 
-## 📊 Current State
+## ✅ Checklist rápido (10 min)
 
-### What Works ✅
-- **File reading:** `get_next_line` reads `.cub` files line-by-line
-- **Line classification:** 4 types (EMPTY, ELEMENT, MAP, INVALID)
-- **Error detection:** Invalid chars (like `X`) are caught
-- **Two build modes:** `make re` (clean), `make debug` (verbose)
+Use este roteiro sempre antes de encerrar sessão:
 
-### Classification Rules (Hard-coded)
-```
-EMPTY     → Only whitespace or empty
-ELEMENT   → Starts with NO, SO, WE, EA, F, C
-MAP       → Contains 0, 1, N, S, E, W, or spaces
-INVALID   → Anything else
-```
+1. `cd "/home/deck/Desktop/Github_Projetcs/42/Cube3D/Cube 3D/Parser"`
+2. `make -s debug`
+3. Validar mapa bom: `./parser_demo ../sample_maps/valid_minimal.cub ; echo "EXIT:$?"`
+4. Validar inválidos do Dia 2:
+  - `./parser_demo ../sample_maps/invalid_duplicate_element.cub ; echo "EXIT:$?"`
+  - `./parser_demo ../sample_maps/invalid_missing_element.cub ; echo "EXIT:$?"`
+  - `./parser_demo ../sample_maps/invalid_element_after_map.cub ; echo "EXIT:$?"`
+5. Confirmar resultado esperado:
+  - válido: `EXIT:0`
+  - inválidos: `EXIT:1` com mensagem clara
 
-### Exit Codes
-- `0` = All lines parsed OK
-- `1` = At least one INVALID line found
-
-### Test Maps
-| Map | Status | Expected |
-|-----|--------|----------|
-| `valid_minimal.cub` | ✅ WORKS | EXIT:0, no error |
-| `invalid_char.cub` | ✅ WORKS | EXIT:1, "invalid line at 10" |
-| `invalid_open.cub` | ✅ WORKS | EXIT:0 (boundary check not yet) |
-| `spawn_colors_demo.cub` | ✅ WORKS | EXIT:0 (spawn points supported) |
+Se esse checklist passar, a base do Dia 2 está consistente.
 
 ---
 
-## 🛠️ Build & Test Commands
+## 🧪 Como testar você mesmo (manual)
 
-### Mode: Normal (Production-like)
-```bash
-make re                    # Full rebuild
-./parser_demo ../sample_maps/valid_minimal.cub
-echo $?                    # Shows EXIT code
-```
-**Output:** Only errors (clean terminal)
+### Teste 1 — Ordem livre dos elementos
 
-### Mode: Debug (Development)
 ```bash
-make debug                 # Full rebuild with -DDEBUG_PARSER
-./parser_demo ../sample_maps/valid_minimal.cub
-echo $?
-```
-**Output:** [DEBUG] traces + [LINE N] details + errors
+cat >/tmp/free_order_day2.cub <<'EOF'
+F 220,100,0
+NO ./textures/north.png
+EA ./textures/east.png
+C 225,30,0
+WE ./textures/west.png
+SO ./textures/south.png
 
-### One-Liner with Visual Separator
-```bash
-make -s re && ./parser_demo ../sample_maps/invalid_char.cub ; echo "EXIT:$?"
+111
+1N1
+111
+EOF
+
+./parser_demo /tmp/free_order_day2.cub ; echo "EXIT:$?"
 ```
 
-### Silent Mode (Hide build output)
+Esperado: `EXIT:0`
+
+### Teste 2 — Duplicado
+
 ```bash
-make -s re    # Same as make re but quieter
-make -s debug # Same as make debug but quieter
+./parser_demo ../sample_maps/invalid_duplicate_element.cub ; echo "EXIT:$?"
 ```
+
+Esperado: `EXIT:1` + `duplicate element ...`
+
+### Teste 3 — Faltando elemento
+
+```bash
+./parser_demo ../sample_maps/invalid_missing_element.cub ; echo "EXIT:$?"
+```
+
+Esperado: `EXIT:1` + `missing required element ...`
+
+### Teste 4 — Elemento depois do mapa
+
+```bash
+./parser_demo ../sample_maps/invalid_element_after_map.cub ; echo "EXIT:$?"
+```
+
+Esperado: `EXIT:1` + `element after map started ...`
 
 ---
 
-## 📁 File Structure (Parser)
+## ✅ Resultado esperado dos mapas atuais
 
-```
+| Mapa | Resultado esperado |
+|------|--------------------|
+| `valid_minimal.cub` | `EXIT:0` |
+| `invalid_char.cub` | `EXIT:1` (invalid line) |
+| `invalid_open.cub` | `EXIT:0` (ainda sem validação de fechamento) |
+| `spawn_colors_demo.cub` | `EXIT:0` |
+| `invalid_duplicate_element.cub` | `EXIT:1` |
+| `invalid_missing_element.cub` | `EXIT:1` |
+| `invalid_element_after_map.cub` | `EXIT:1` |
+
+---
+
+## 🧩 Estrutura de código (Parser)
+
+```text
 Cube 3D/Parser/
-├── Makefile                      # Targets: make, make debug, make re
 ├── includes/
-│   ├── debug.h                   # Macros: DBG_LINE, DBG_CLASSIFIED_LINE
-│   ├── parser.h                  # Main include (includes debug.h + parsing.h)
-│   └── parsing.h                 # Function prototypes
-├── src/
-│   ├── main_parser.c             # main() + print_visual_separator()
-│   └── parsing/
-│       ├── line_types.c          # is_empty_line, is_element_line, is_map_line, line_type_name
-│       └── read_lines.c          # classify_file_lines (entry point)
-└── sample_maps/
-    ├── valid_minimal.cub         # 5x5 simple map
-    ├── invalid_char.cub          # Line 10 has 'X' (invalid)
-    ├── invalid_open.cub          # Not fully enclosed (check later)
-    └── spawn_colors_demo.cub     # With spawn points N/S/E/W
+│   ├── parser.h
+│   ├── parsing.h
+│   ├── parser_config.h
+│   ├── elements.h
+│   ├── parser_errors.h
+│   └── debug.h
+└── src/
+    ├── main_parser.c
+    └── parsing/
+        ├── reader/read_lines.c
+        ├── types/line_types.c
+        ├── config/parser_config.c
+        ├── elements/elements_parse.c
+        ├── elements/elements_validate.c
+        └── utils/parser_errors.c
+```
+
+### Fluxo atual
+
+```text
+main_parser.c
+  -> load_file_lines(fd)
+      -> line_type_name()
+      -> parse_element_line()
+      -> validate_required_elements()
+      -> free_parser_config()
 ```
 
 ---
 
-## 🔍 Debug Macros (In debug.h)
+## 🛠️ Sprint de Implementação (Plano)
 
-**When `make re` (normal):**
-```c
-#define DBG_LINE(...) ((void)0)              // → Does nothing
-#define DBG_CLASSIFIED_LINE(...) ((void)0)   // → Does nothing
-```
+### Dia 1  — Base de leitura estável ✅
+- **Meta:** fechar leitura de arquivo e classificação inicial de linhas.
+- **Entregas:** `load_file_lines`, `is_empty_line`, `is_map_line`, `is_element_line`.
+- **Critério de pronto:** imprimir para cada linha o tipo detectado (debug).
 
-**When `make debug`:**
-```c
-#define DBG_LINE(fn, result) ft_printf("[DEBUG] %s -> %d\n", fn, result)
-#define DBG_CLASSIFIED_LINE(line_no, line_type, line) \
-        ft_printf("[LINE %d] %s | %s", line_no, line_type, line)
-```
+### Dia 2 — Parse de elementos ✅
+- **Meta:** parsear `NO/SO/WE/EA/F/C` com ordem livre.
+- **Entregas:** estrutura de config + detecção de duplicado/faltando.
+- **Critério de pronto:** arquivo válido carrega config completa; inválidos dão erro claro.
 
-**Example output (debug mode):**
-```
-[DEBUG] is_empty_line -> 0
-[DEBUG] is_element_line -> 1
-[LINE 1] ELEMENT | NO ./textures/north.png
-...
-Error: invalid line at 10
-[LINE 10] INVALID | 10N0X1
-EXIT:1
-```
+### Dia 3 — Extração e normalização do mapa
+- **Meta:** separar bloco de mapa e montar grade retangular com preenchimento por espaço.
+- **Entregas:** `extract_map_grid`, cálculo de largura máxima, cópia preservando layout.
+- **Critério de pronto:** mapa “como no arquivo” representado corretamente em memória.
 
----
+### Dia 4 — Validação estrutural do mapa
+- **Meta:** validar charset e spawn.
+- **Entregas:** checagem de caracteres válidos + exatamente 1 spawn.
+- **Critério de pronto:** `invalid_char` e “2 spawns” falham com mensagem específica.
 
-## 🎯 Next Steps (Priority Order)
+### Dia 5 — Fechamento do mapa
+- **Meta:** validar mapa fechado (sem `0`/spawn tocando vazio/borda).
+- **Entregas:** validador de vizinhança (4 direções) e casos de teste de abertura.
+- **Critério de pronto:** `invalid_open` falha corretamente; mapa válido passa.
 
-### Phase 1: Parser State Machine (Next Session)
-- [ ] Implement CONFIG state: expect elements (NO/SO/WE/EA/F/C)
-- [ ] Implement MAP state: expect map lines (0/1/N/S/E/W)
-- [ ] **Validation:** Each element appears **exactly once** in CONFIG
-- [ ] **Boundary:** Clear transition from CONFIG→MAP (no interleaving)
-- [ ] **Error handling:** Report which element is duplicate/missing/out-of-order
-
-**Files to modify:**
-- `parsing.h` → Add new function prototypes
-- `line_types.c` → Add element type checking (NO vs SO vs etc)
-- `read_lines.c` → Rewrite as state machine instead of just classification
-
-### Phase 2: RGB Parsing
-- [ ] Parse `F 220,100,0` → Extract R, G, B
-- [ ] Validate each component in range [0, 255]
-- [ ] Store in struct for later use
-
-### Phase 3: Map Validation
-- [ ] Check that map is fully enclosed by `1` (walls)
-- [ ] Validate spawn point (`N/S/E/W`) appears exactly once
-
-### Phase 4: Integration
-- [ ] Return structured data (not just EXIT code)
-- [ ] Memory: Free all allocated resources
-- [ ] Connect to MLX42 for visual rendering
+### Dia 6 — Consolidação para entrega
+- **Meta:** limpar fluxo final do parser.
+- **Entregas:** pipeline único `parse_cub_file`, mensagens de erro padronizadas, revisão de memória.
+- **Critério de pronto:** rodar bateria de mapas válidos/inválidos sem crash e com erros consistentes.
 
 ---
 
-## 🐛 Known Issues & Tech Debt
+## 🔎 Observação de debug (Dia 2)
 
-| Issue | Severity | Note |
-|-------|----------|------|
-| `.vscode/` in git | Low | Remove before submission |
-| `obj/` & `parser_demo` in git | Low | Add to `.gitignore` |
-| Debug output has trailing `\n` | Low | By design (from `get_next_line`), acceptable |
-| No enum for line types | Medium | Currently uses `char *` strings; refactor later |
-| No memory validation | Medium | Check for leaks before final commit |
+Sim, existe debug útil para o Dia 2:
+- `[DEBUG] is_*` para classificação.
+- `[LINE N] TYPE | conteúdo` para visão por linha.
+- Mensagens claras de erro de elementos.
 
 ---
 
-## 🧠 Key Decisions Made This Session
+## Próximo foco recomendado
 
-1. **Debug Macros Consolidated** → All in `debug.h` (clean code)
-2. **Removed inline #ifdef from functions** → Calls `DBG_*` macros instead
-3. **Visual separator added** → Makes terminal output easier to read
-4. **Line classification logic in `line_types.c`** → Easier to extend for state machine
+Iniciar **Dia 3** com duas funções centrais:
+1. `extract_map_grid`
+2. `get_max_map_width`
 
----
-
-## ❓ Common Debugging Tips
-
-**Q: Build doesn't seem to work?**
-```bash
-make fclean  # Remove everything
-make re      # Rebuild from scratch
-```
-
-**Q: Debug output looks wrong?**
-```bash
-make debug   # Ensure you're actually in debug mode
-# vs
-make re      # vs normal mode
-```
-
-**Q: How do I add a new .cub test file?**
-```bash
-# Create file in ../sample_maps/my_test.cub
-# Then run:
-./parser_demo ../sample_maps/my_test.cub ; echo "EXIT:$?"
-```
-
-**Q: Parser crashes on valid input?**
-```bash
-# Run in debug to see where it fails:
-make debug && ./parser_demo ../sample_maps/valid_minimal.cub
-```
-
----
-
-## 📝 How to Use This File Tomorrow
-
-1. **Read "Quick Start" section** → Copy-paste commands
-2. **Check "Current State" section** → Understand what already works
-3. **Review "Next Steps"** → Pick the next task
-4. **Reference "File Structure"** → Know where to edit
-5. **Use "Debug Macros" section** → Understand compilation behavior
-
----
-
-**Meta Note for AI:** This file should be updated after each session with new learnings, issues, or changes to the development flow.
+Depois, adicionar casos de teste com linhas de tamanhos diferentes e espaços internos.

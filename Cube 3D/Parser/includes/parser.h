@@ -3,6 +3,9 @@
 
 # include "debug.h"
 # include "parsing.h"
+# include "parser_config.h"
+# include "elements.h"
+# include "parser_errors.h"
 # include "libft.h"
 # include <fcntl.h>
 
