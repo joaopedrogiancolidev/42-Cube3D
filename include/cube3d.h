@@ -6,7 +6,7 @@
 /*   By: arthur <arthur@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/18 17:12:10 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/19 10:19:29 by arthur           ###   ########.fr       */
+/*   Updated: 2026/03/19 11:06:25 by arthur           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 # include <MLX42/MLX42.h>
 # include "image.h"
 # include <stdint.h>
+# include "raycasting.h"
 
 typedef struct s_image_cube
 {
