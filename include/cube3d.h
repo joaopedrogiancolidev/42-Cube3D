@@ -6,7 +6,7 @@
 /*   By: arthur <arthur@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/18 17:12:10 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/19 13:19:54 by arthur           ###   ########.fr       */
+/*   Updated: 2026/03/19 13:26:49 by arthur           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,8 +58,10 @@ typedef struct s_raycast
 	double time;
 	double oldTime;
 	double frameTime;
-	
-	
+	double moveSpeed;
+	double rotSpeed;
+	double oldDirX;
+	double oldPlaneX;
 	
 	
 	

@@ -6,7 +6,7 @@
 /*   By: arthur <arthur@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/18 17:30:32 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/19 12:51:41 by arthur           ###   ########.fr       */
+/*   Updated: 2026/03/19 13:32:32 by arthur           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,7 @@ t_cube_data parser(int argc, char **argv)
 		.raycast.dirY = 0.0,
 		.raycast.planeX = 0.0,
 		.raycast.planeY = 0.66,
+		.raycast.oldTime = 0,
 	};
 	return (cube_data);
 }
