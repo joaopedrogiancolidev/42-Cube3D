@@ -1,9 +1,12 @@
 /*
-** map_validate.c - Day 4: Structural map validation
+** map_validate.c - Days 4-5: Structural and closure map validation
 **
-** Validations:
+** Day 4 validations:
 **   1) Allowed charset in normalized grid: '0', '1', 'N', 'S', 'E', 'W', ' '
 **   2) Exactly one spawn marker among 'N', 'S', 'E', 'W'
+**
+** Day 5 validation:
+**   3) Every walkable/spawn cell must be enclosed by non-void neighbors.
 */
 
 #include "parser.h"
@@ -24,6 +27,28 @@ static int	is_spawn_char(char c)
 static int	is_allowed_map_char(char c)
 {
 	return (c == '0' || c == '1' || c == ' ' || is_spawn_char(c));
+}
+
+/*
+** Used by closure validation to identify traversable positions.
+*/
+static int	is_walkable_char(char c)
+{
+	return (c == '0' || is_spawn_char(c));
+}
+
+/*
+** Returns 1 when a traversable cell leaks to map edge or to void (' ').
+** Called only for walkable chars by validate_map_closed().
+*/
+static int	is_open_cell(t_map_grid *map, int row, int col)
+{
+	if (row == 0 || col == 0 || row == map->height - 1 || col == map->width - 1)
+		return (1);
+	if (map->lines[row - 1][col] == ' ' || map->lines[row + 1][col] == ' '
+		|| map->lines[row][col - 1] == ' ' || map->lines[row][col + 1] == ' ')
+		return (1);
+	return (0);
 }
 
 /*
@@ -66,6 +91,34 @@ int	validate_map_charset_and_spawn(t_map_grid *map)
 	{
 		parser_error_spawn_count(spawn_count);
 		return (1);
+	}
+	return (0);
+}
+
+/*
+** Day 5 closure validation entry point.
+** Called after Day 4 checks, so charset/spawn assumptions are already valid.
+*/
+int	validate_map_closed(t_map_grid *map)
+{
+	int	row;
+	int	col;
+
+	row = 0;
+	while (row < map->height)
+	{
+		col = 0;
+		while (col < map->width)
+		{
+			if (is_walkable_char(map->lines[row][col]) && is_open_cell(map, row, col))
+			{
+				DBG_MAP_VALIDATE_OPEN(row + 1, col + 1, map->lines[row][col]);
+				parser_error_map_open(row + 1, col + 1, map->lines[row][col]);
+				return (1);
+			}
+			col++;
+		}
+		row++;
 	}
 	return (0);
 }

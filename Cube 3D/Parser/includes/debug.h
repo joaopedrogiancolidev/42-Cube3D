@@ -27,6 +27,8 @@
 	ft_printf(DBG_COLOR_YELLOW "[MAP VALIDATE] invalid '%c' at row=%d col=%d" DBG_COLOR_RESET "\n", c, row, col)
 #  define DBG_MAP_VALIDATE_SPAWN(count) \
 	ft_printf(DBG_COLOR_YELLOW "[MAP VALIDATE] spawn_count=%d" DBG_COLOR_RESET "\n", count)
+#  define DBG_MAP_VALIDATE_OPEN(row, col, c) \
+	ft_printf(DBG_COLOR_YELLOW "[MAP VALIDATE] open map at row=%d col=%d around '%c'" DBG_COLOR_RESET "\n", row, col, c)
 # else
 #  define DBG_LINE(fn, line, result) ((void)0)
 #  define DBG_CLASSIFIED_LINE(line_no, line_type, line) ((void)0)
@@ -34,6 +36,7 @@
 #  define DBG_MAP_GRID_LINE(index, line) ((void)0)
 #  define DBG_MAP_VALIDATE_CHAR(row, col, c) ((void)0)
 #  define DBG_MAP_VALIDATE_SPAWN(count) ((void)0)
+#  define DBG_MAP_VALIDATE_OPEN(row, col, c) ((void)0)
 # endif
 
 #endif

@@ -1,14 +1,6 @@
 #include "parser.h"
 
 /*
-** Visual marker used only by parser_demo to make terminal output easier to scan.
-*/
-static void	print_visual_separator(void)
-{
-	ft_printf("\n----PARSER ERROR MANAGER:----\n\n");
-}
-
-/*
 ** Entry point for parser_demo.
 ** Why it exists:
 ** - Validate CLI usage and open the .cub file.
@@ -17,23 +9,14 @@ static void	print_visual_separator(void)
 */
 int	main(int argc, char **argv)
 {
-	int		fd;
 	int		has_invalid;
 
-       print_visual_separator();
 	if (argc != 2)
 	{
-		ft_printf("Usage: ./parser_demo <map.cub>\n");
+		parser_error_usage();
 		return (1);
 	}
-	fd = open(argv[1], O_RDONLY);
-	if (fd < 0)
-	{
-		ft_printf("Error: could not open file: %s\n", argv[1]);
-		return (1);
-	}
-	has_invalid = load_file_lines(fd);
-	close(fd);
+	has_invalid = parse_cub_file(argv[1]);
 	if (has_invalid)
 		return (1);
 	return (0);

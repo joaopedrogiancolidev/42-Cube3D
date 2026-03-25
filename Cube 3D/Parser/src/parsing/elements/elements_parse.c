@@ -18,12 +18,20 @@ static char	*skip_spaces(char *line)
 static int	set_element_value(char **dst, char *value, const char *key,
 		int line_no)
 {
+	char	*clean_value;
+
 	if (*dst)
 	{
 		parser_error_duplicate(key, line_no);
 		return (1);
 	}
-	*dst = ft_strdup(value);
+	clean_value = ft_strtrim(value, " \t\n");
+	if (!clean_value)
+	{
+		parser_error_malloc(key, line_no);
+		return (1);
+	}
+	*dst = clean_value;
 	if (!*dst)
 	{
 		parser_error_malloc(key, line_no);

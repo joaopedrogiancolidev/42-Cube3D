@@ -9,6 +9,8 @@ typedef struct s_parser_config
 	char	*ea_path;
 	char	*f_raw;
 	char	*c_raw;
+	int		floor_rgb[3];
+	int		ceiling_rgb[3];
 }t_parser_config;
 
 void	init_parser_config(t_parser_config *cfg);

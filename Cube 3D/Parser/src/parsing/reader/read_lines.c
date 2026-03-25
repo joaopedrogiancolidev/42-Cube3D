@@ -1,5 +1,5 @@
 /*
-** read_lines.c - Main parser orchestration (Days 1-4)
+** read_lines.c - Main parser orchestration (Days 1-5)
 ** 
 ** load_file_lines(fd):
 **   Orchestrates the entire parsing flow:
@@ -16,6 +16,10 @@
 **     - After config is valid, call extract_map_grid() to normalize
 **     - Result: map stored as rectangular grid in memory
 **   
+**   Day 5: Closure validation phase
+**     - Validate map enclosure in normalized rectangular grid
+**     - Reject walkable/spawn cells touching boundaries or void spaces
+**
 **   Return: 0 if parsing succeeds, 1 if any error detected
 */
 
@@ -63,7 +67,7 @@ static void	report_invalid_line(char *line, int line_no, int has_map_started)
 	parser_error_invalid_line(line_no);
 }
 
-int	load_file_lines(int fd)
+int	load_file_lines(int fd, const char *source_path)
 {
 	char	*line;
 	char	*line_type;
@@ -109,7 +113,7 @@ int	load_file_lines(int fd)
 		line_no++;
 	}
 	if (!has_invalid)
-		has_invalid = validate_required_elements(&cfg);
+		has_invalid = validate_required_elements(&cfg, source_path);
 	if (!has_invalid && extract_map_grid(&map) != 0)
 	{
 		has_invalid = 1;
@@ -117,6 +121,9 @@ int	load_file_lines(int fd)
 	}
 	/* Day 4 runs on normalized map to guarantee stable row/col iteration. */
 	if (!has_invalid && validate_map_charset_and_spawn(&map) != 0)
+		has_invalid = 1;
+	/* Day 5 closure runs after charset/spawn guarantees. */
+	if (!has_invalid && validate_map_closed(&map) != 0)
 		has_invalid = 1;
 	free_parser_config(&cfg);
 	free_map_grid(&map);

@@ -9,4 +9,10 @@
 */
 int	validate_map_charset_and_spawn(t_map_grid *map);
 
+/*
+** Day 5: map closure validation on the normalized rectangular grid.
+** Used after charset/spawn validation to ensure no walkable cell leaks to void.
+*/
+int	validate_map_closed(t_map_grid *map);
+
 #endif

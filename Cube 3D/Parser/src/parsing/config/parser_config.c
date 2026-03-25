@@ -12,6 +12,12 @@ void	init_parser_config(t_parser_config *cfg)
 	cfg->ea_path = NULL;
 	cfg->f_raw = NULL;
 	cfg->c_raw = NULL;
+	cfg->floor_rgb[0] = -1;
+	cfg->floor_rgb[1] = -1;
+	cfg->floor_rgb[2] = -1;
+	cfg->ceiling_rgb[0] = -1;
+	cfg->ceiling_rgb[1] = -1;
+	cfg->ceiling_rgb[2] = -1;
 }
 
 /*
