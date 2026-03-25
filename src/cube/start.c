@@ -6,7 +6,7 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/19 11:02:57 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/25 14:00:16 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/25 16:06:29 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ void	raycast(void *param)
 	if (mlx_is_key_down(mlx, MLX_KEY_ESCAPE))
 		mlx_close_window(mlx);
 	refresh_pixel(cube_data);
-	calculate_hit(cube_data);
+	calculate_raycast(cube_data);
 	calculate_rotation_and_movement(cube_data);
 }
 
