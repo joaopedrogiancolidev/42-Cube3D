@@ -6,12 +6,11 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/19 11:02:57 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/25 16:06:29 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/25 16:27:32 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cube3d.h"
-
 
 void	raycast(void *param)
 {
@@ -43,7 +42,6 @@ int	start_cube(t_cube_data *cube_data)
 	}
 	mlx_image_to_window(cube_data->mlx, cube_data->image_cube.image, 0, 0);
 	mlx_loop_hook(cube_data->mlx, raycast, cube_data);
-
 	mlx_loop(cube_data->mlx);
 	mlx_terminate(cube_data->mlx);
 }

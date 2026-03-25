@@ -6,7 +6,7 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/19 14:34:50 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/25 13:51:56 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/25 16:19:46 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,8 @@ void	ver_line(mlx_image_t	*img, int x, t_raycast *raycast)
 {
 	int	y;
 
-	y = raycast->drawStart;
-	while (y <= raycast->drawEnd)
+	y = raycast->draw_start;
+	while (y <= raycast->draw_end)
 	{
 		if (x >= 0 && x < (int)img->width && y >= 0 && y < (int)img->height)
 		{

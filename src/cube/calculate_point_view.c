@@ -6,7 +6,7 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/19 14:20:28 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/25 13:49:53 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/25 16:23:27 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,36 +14,36 @@
 
 void	key_rigth_move_point_view(t_cube_data *cube_data)
 {
-	cube_data->raycast.oldDirX = cube_data->raycast.dirX;
-	cube_data->raycast.dirX = cube_data->raycast.dirX
-		* cos(-cube_data->raycast.moveSpeed) - cube_data->raycast.dirY
-		* sin(-cube_data->raycast.moveSpeed);
-	cube_data->raycast.dirY = cube_data->raycast.oldDirX
-		* sin(-cube_data->raycast.moveSpeed) + cube_data->raycast.dirY
-		* cos(-cube_data->raycast.moveSpeed);
-	cube_data->raycast.oldPlaneX = cube_data->raycast.planeX;
-	cube_data->raycast.planeX = cube_data->raycast.planeX
-		* cos(-cube_data->raycast.moveSpeed) - cube_data->raycast.planeY
-		* sin(-cube_data->raycast.moveSpeed);
-	cube_data->raycast.planeY = cube_data->raycast.oldPlaneX
-		* sin(-cube_data->raycast.moveSpeed) + cube_data->raycast.planeY
-		* cos(-cube_data->raycast.moveSpeed);
+	cube_data->raycast.olddir_x = cube_data->raycast.dir_x;
+	cube_data->raycast.dir_x = cube_data->raycast.dir_x
+		* cos(-cube_data->raycast.move_speed) - cube_data->raycast.dir_y
+		* sin(-cube_data->raycast.move_speed);
+	cube_data->raycast.dir_y = cube_data->raycast.olddir_x
+		* sin(-cube_data->raycast.move_speed) + cube_data->raycast.dir_y
+		* cos(-cube_data->raycast.move_speed);
+	cube_data->raycast.oldplane_x = cube_data->raycast.plane_x;
+	cube_data->raycast.plane_x = cube_data->raycast.plane_x
+		* cos(-cube_data->raycast.move_speed) - cube_data->raycast.plane_y
+		* sin(-cube_data->raycast.move_speed);
+	cube_data->raycast.plane_y = cube_data->raycast.oldplane_x
+		* sin(-cube_data->raycast.move_speed) + cube_data->raycast.plane_y
+		* cos(-cube_data->raycast.move_speed);
 }
 
 void	key_left_move_point_view(t_cube_data *cube_data)
 {
-	cube_data->raycast.oldDirX = cube_data->raycast.dirX;
-	cube_data->raycast.dirX = cube_data->raycast.dirX
-		* cos(cube_data->raycast.moveSpeed) - cube_data->raycast.dirY
-		* sin(cube_data->raycast.moveSpeed);
-	cube_data->raycast.dirY = cube_data->raycast.oldDirX
-		* sin(cube_data->raycast.moveSpeed) + cube_data->raycast.dirY
-		* cos(cube_data->raycast.moveSpeed);
-	cube_data->raycast.oldPlaneX = cube_data->raycast.planeX;
-	cube_data->raycast.planeX = cube_data->raycast.planeX
-		* cos(cube_data->raycast.moveSpeed) - cube_data->raycast.planeY
-		* sin(cube_data->raycast.moveSpeed);
-	cube_data->raycast.planeY = cube_data->raycast.oldPlaneX
-		* sin(cube_data->raycast.moveSpeed) + cube_data->raycast.planeY
-		* cos(cube_data->raycast.moveSpeed);
+	cube_data->raycast.olddir_x = cube_data->raycast.dir_x;
+	cube_data->raycast.dir_x = cube_data->raycast.dir_x
+		* cos(cube_data->raycast.move_speed) - cube_data->raycast.dir_y
+		* sin(cube_data->raycast.move_speed);
+	cube_data->raycast.dir_y = cube_data->raycast.olddir_x
+		* sin(cube_data->raycast.move_speed) + cube_data->raycast.dir_y
+		* cos(cube_data->raycast.move_speed);
+	cube_data->raycast.oldplane_x = cube_data->raycast.plane_x;
+	cube_data->raycast.plane_x = cube_data->raycast.plane_x
+		* cos(cube_data->raycast.move_speed) - cube_data->raycast.plane_y
+		* sin(cube_data->raycast.move_speed);
+	cube_data->raycast.plane_y = cube_data->raycast.oldplane_x
+		* sin(cube_data->raycast.move_speed) + cube_data->raycast.plane_y
+		* cos(cube_data->raycast.move_speed);
 }

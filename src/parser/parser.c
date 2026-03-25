@@ -6,7 +6,7 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/18 17:30:32 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/25 16:13:28 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/25 16:19:34 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,13 +44,13 @@ t_cube_data parser(int argc, char **argv)
 			{1,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
 			{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
 		},
-		.raycast.posX = 7.5,
-		.raycast.posY = 9.5,
-		.raycast.dirX = -1.0,
-		.raycast.dirY = 0.0,
-		.raycast.planeX = 0.0,
-		.raycast.planeY = 0.66,
-		.raycast.oldTime = 0,
+		.raycast.pos_x = 7.5,
+		.raycast.pos_y = 9.5,
+		.raycast.dir_x = -1.0,
+		.raycast.dir_y = 0.0,
+		.raycast.plane_x = 0.0,
+		.raycast.plane_y = 0.66,
+		.raycast.old_time = 0,
 	};
 	return (cube_data);
 }
