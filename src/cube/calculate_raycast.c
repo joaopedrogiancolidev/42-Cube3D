@@ -6,7 +6,7 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 16:22:37 by armeneze          #+#    #+#             */
-/*   Updated: 2026/03/25 16:22:56 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/25 18:37:55 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,19 +57,7 @@ void	calculate_dda(t_cube_data *cube_data, int x)
 	calculate_side_dist(r);
 }
 
-uint32_t	change_color(t_cube_data *cube_data, t_raycast *r)
-{
-	if (cube_data->map[r->map_y][r->map_x] == 1)
-		r->color = ft_pixel(255, 0, 0, 255);
-	else if (cube_data->map[r->map_y][r->map_x] == 2)
-		r->color = ft_pixel(0, 255, 0, 255);
-	else if (cube_data->map[r->map_y][r->map_x] == 3)
-		r->color = ft_pixel(0, 0, 255, 255);
-	else
-		r->color = ft_pixel(255, 255, 255, 255);
-	if (r->side == 1)
-		r->color = (r->color >> 1) & 0x7F7F7FFF;
-}
+
 
 void	calculate_hit(t_raycast *r, t_cube_data *cube_data)
 {
@@ -99,6 +87,27 @@ void	calculate_hit(t_raycast *r, t_cube_data *cube_data)
 	}
 }
 
+void	calculate_draw_start_end(t_raycast *r, t_cube_data *cube_data)
+{
+	int	pitch;
+
+	pitch = 0;
+	if (r->side == 0)
+		r->perp_wall_dist = (r->side_dist_x - r->delta_dist_x);
+	else
+		r->perp_wall_dist = (r->side_dist_y - r->delta_dist_y);
+	r->line_height = (int)(cube_data->image_cube.height
+			/ r->perp_wall_dist);
+	r->draw_start = -r->line_height / 2 + cube_data->image_cube.height
+		/ 2 + pitch;
+	if (r->draw_start < 0)
+		r->draw_start = 0;
+	r->draw_end = r->line_height / 2 + cube_data->image_cube.height
+		/ 2 + pitch;
+	if (r->draw_end >= cube_data->image_cube.height)
+		r->draw_end = cube_data->image_cube.height - 1;
+}
+
 void	calculate_raycast(t_cube_data *cube_data)
 {
 	int			x;
@@ -110,18 +119,7 @@ void	calculate_raycast(t_cube_data *cube_data)
 	{
 		calculate_dda(cube_data, x);
 		calculate_hit(r, cube_data);
-		if (r->side == 0)
-			r->perp_wall_dist = (r->side_dist_x - r->delta_dist_x);
-		else
-			r->perp_wall_dist = (r->side_dist_y - r->delta_dist_y);
-		r->line_height = (int)(cube_data->image_cube.height
-				/ r->perp_wall_dist);
-		r->draw_start = -r->line_height / 2 + cube_data->image_cube.height / 2;
-		if (r->draw_start < 0)
-			r->draw_start = 0;
-		r->draw_end = r->line_height / 2 + cube_data->image_cube.height / 2;
-		if (r->draw_end >= cube_data->image_cube.height)
-			r->draw_end = cube_data->image_cube.height - 1;
+		calculate_draw_start_end(r, cube_data);
 		change_color(cube_data, r);
 		ver_line(cube_data->image_cube.image, x, &cube_data->raycast);
 		x++;

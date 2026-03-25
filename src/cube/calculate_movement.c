@@ -6,7 +6,7 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/19 13:45:12 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/25 16:23:17 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/25 18:55:03 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,79 +14,95 @@
 
 void	key_up_move_position(t_cube_data *cube_data)
 {
-	if (cube_data->map[(int)cube_data->raycast.pos_y][(int)
-		(cube_data->raycast.pos_x + cube_data->raycast.dir_x
-			* cube_data->raycast.move_speed)] == 0)
+	t_raycast	*r;
+
+	r = &cube_data->raycast;
+	if (cube_data->map[(int)r->pos_y][(int)
+		(r->pos_x + r->dir_x
+			* r->move_speed)] == 0)
 	{
-		cube_data->raycast.pos_x += cube_data->raycast.dir_x
-			* cube_data->raycast.move_speed;
+		r->pos_x += r->dir_x
+			* r->move_speed;
 	}
-	if (cube_data->map[(int)(cube_data->raycast.pos_y + cube_data->raycast.dir_y
-			* cube_data->raycast.move_speed)]
-			[(int)cube_data->raycast.pos_x] == 0)
+	if (cube_data->map[(int)(r->pos_y + r->dir_y
+			* r->move_speed)]
+			[(int)r->pos_x] == 0)
 	{
-		cube_data->raycast.pos_y += cube_data->raycast.dir_y
-			* cube_data->raycast.move_speed;
+		r->pos_y += r->dir_y
+			* r->move_speed;
 	}
 }
 
 void	key_down_move_position(t_cube_data *cube_data)
 {
-	if (cube_data->map[(int)cube_data->raycast.pos_y][(int)
-		(cube_data->raycast.pos_x - cube_data->raycast.dir_x
-			* cube_data->raycast.move_speed)] == 0)
+	t_raycast	*r;
+
+	r = &cube_data->raycast;
+	if (cube_data->map[(int)r->pos_y][(int)
+		(r->pos_x - r->dir_x
+			* r->move_speed)] == 0)
 	{
-		cube_data->raycast.pos_x -= cube_data->raycast.dir_x
-			* cube_data->raycast.move_speed;
+		r->pos_x -= r->dir_x
+			* r->move_speed;
 	}
-	if (cube_data->map[(int)(cube_data->raycast.pos_y - cube_data->raycast.dir_y
-			* cube_data->raycast.move_speed)]
-			[(int)cube_data->raycast.pos_x] == 0)
+	if (cube_data->map[(int)(r->pos_y - r->dir_y
+			* r->move_speed)]
+			[(int)r->pos_x] == 0)
 	{
-		cube_data->raycast.pos_y -= cube_data->raycast.dir_y
-			* cube_data->raycast.move_speed;
+		r->pos_y -= r->dir_y
+			* r->move_speed;
 	}
 }
 
 void	key_rigth_move_position(t_cube_data *cube_data)
 {
-	double	move_s;
-	double	dir_x;
-	double	dir_y;
+	t_raycast	*r;
+	double		move_s;
+	double		dir_x;
+	double		dir_y;
 
-	move_s = cube_data->raycast.move_speed;
-	dir_x = cube_data->raycast.dir_x;
-	dir_y = cube_data->raycast.dir_y;
-	if (cube_data->map[(int)cube_data->raycast.pos_y]
-		[(int)(cube_data->raycast.pos_x - dir_y * move_s)] == 0)
+
+	r = &cube_data->raycast;
+	move_s = r->move_speed;
+	dir_x = r->dir_x;
+	dir_y = r->dir_y;
+	if (cube_data->map[(int)r->pos_y]
+		[(int)(r->pos_x - dir_y * move_s)] == 0)
 	{
-		cube_data->raycast.pos_x -= dir_y * move_s;
+		printf("1 r->pos_x -= dir_y * move_s; map position = %d\n", cube_data->map[(int)(r->pos_y + dir_x * move_s)]
+		[(int)r->pos_x]);
+		r->pos_x -= dir_y * move_s;
 	}
-	if (cube_data->map[(int)(cube_data->raycast.pos_y + dir_x * move_s)]
-		[(int)cube_data->raycast.pos_x] == 0)
+	if (cube_data->map[(int)(r->pos_y + dir_x * move_s)]
+		[(int)r->pos_x] == 0)
 	{
-		cube_data->raycast.pos_y += dir_x * move_s;
+		printf("2 r->pos_y += dir_x * move_s; map position = %d\n", cube_data->map[(int)(r->pos_y + dir_x * move_s)][(int)r->pos_x]);
+		r->pos_y += dir_x * move_s;
 	}
 }
 
 void	key_left_move_position(t_cube_data *cube_data)
 {
-	double	move_s;
-	double	dir_x;
-	double	dir_y;
+	t_raycast	*r;
+	double		move_s;
+	double		dir_x;
+	double		dir_y;
 
-	move_s = cube_data->raycast.move_speed;
-	dir_x = cube_data->raycast.dir_x;
-	dir_y = cube_data->raycast.dir_y;
-	if (cube_data->map[(int)cube_data->raycast.pos_y]
-		[(int)(cube_data->raycast.pos_x - dir_y * move_s)] == 0)
+	r = &cube_data->raycast;
+	move_s = r->move_speed;
+	dir_x = r->dir_x;
+	dir_y = r->dir_y;
+	if (cube_data->map[(int)r->pos_y]
+		[(int)(r->pos_x - dir_y * move_s)] == 0)
 	{
-		cube_data->raycast.pos_x += dir_y * move_s;
+		printf("3 r->pos_x += dir_y * move_s; map position = %d\n", cube_data->map[(int)(r->pos_y + dir_x * move_s)][(int)r->pos_x]);
+		r->pos_x += dir_y * move_s;
 	}
-	if (cube_data->map[(int)(cube_data->raycast.pos_y + dir_x * move_s)]
-		[(int)cube_data->raycast.pos_x] == 0)
+	if (cube_data->map[(int)(r->pos_y + dir_x * move_s)]
+		[(int)r->pos_x] == 0)
 	{
-		cube_data->raycast.pos_y -= dir_x * move_s;
+		printf("4 r->pos_y -= dir_x * move_s; map position = %d\n", cube_data->map[(int)(r->pos_y + dir_x * move_s)][(int)r->pos_x]);
+		r->pos_y -= dir_x * move_s;
 	}
 }
 
