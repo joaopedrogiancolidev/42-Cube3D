@@ -3,15 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   cube3d.h                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: arthur <arthur@student.42.fr>              +#+  +:+       +#+        */
+/*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/18 17:12:10 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/19 14:37:59 by arthur           ###   ########.fr       */
+/*   Updated: 2026/03/25 13:57:08 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CUBE3D_H
-#define CUBE3D_H
+# define CUBE3D_H
 
 # include <stdio.h>
 # include <stdlib.h>
@@ -21,49 +21,49 @@
 # include "image.h"
 # include <stdint.h>
 # include "raycasting.h"
-#include <math.h>
+# include <math.h>
 
 typedef struct s_image_cube
 {
-	mlx_image_t*	image;
+	mlx_image_t			*image;
 	uint32_t			width;
 	uint32_t			height;
 }	t_image_cube;
 
 typedef struct s_raycast
 {
-	double	posX;
-	double	posY;
-	double	dirX;
-	double	dirY;
-	double	planeX;
-	double	planeY;
-	double	cameraX;
-	double	rayDirX;
-    double	rayDirY;
-	int		mapX;
-	int		mapY;
-	double	deltaDistX;
-	double	deltaDistY;
-	double	sideDistX;
-	double	sideDistY;
-	int		stepX;
-	int		stepY;
-	int		hit;
-	int		side;
-	double	perpWallDist;
-	int		lineHeight;
-	int drawStart;
-	int drawEnd;
-	uint32_t color;
-	double time;
-	double oldTime;
-	double frameTime;
-	double moveSpeed;
-	double rotSpeed;
-	double oldDirX;
-	double oldPlaneX;	
-} t_raycast;
+	double		posX;
+	double		posY;
+	double		dirX;
+	double		dirY;
+	double		planeX;
+	double		planeY;
+	double		cameraX;
+	double		rayDirX;
+	double		rayDirY;
+	int			mapX;
+	int			mapY;
+	double		deltaDistX;
+	double		deltaDistY;
+	double		sideDistX;
+	double		sideDistY;
+	int			stepX;
+	int			stepY;
+	int			hit;
+	int			side;
+	double		perpWallDist;
+	int			lineHeight;
+	int			drawStart;
+	int			drawEnd;
+	uint32_t	color;
+	double		time;
+	double		oldTime;
+	double		frameTime;
+	double		moveSpeed;
+	double		rotSpeed;
+	double		oldDirX;
+	double		oldPlaneX;	
+}	t_raycast;
 
 typedef struct s_cube_data
 {
@@ -78,7 +78,7 @@ typedef struct s_cube_data
 }	t_cube_data;
 
 t_cube_data parser(int argc, char **argv);
-t_cube_data open_file_array(char *path);
 void 		free_all(t_cube_data *cube_data);
+void	ver_line(mlx_image_t	*img, int x, t_raycast *raycast);
 
 #endif

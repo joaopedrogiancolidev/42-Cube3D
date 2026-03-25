@@ -6,78 +6,122 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 13:01:18 by armeneze          #+#    #+#             */
-/*   Updated: 2026/03/25 13:01:19 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/25 16:00:56 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cube3d.h"
 
-void	calculate_dda(t_cube_data* cube_data, int x)
-{
-		cube_data->raycast.cameraX = 2 * x / (double)cube_data->image_cube.width - 1;
-		cube_data->raycast.rayDirX = cube_data->raycast.dirX + cube_data->raycast.planeX * cube_data->raycast.cameraX;
-		cube_data->raycast.rayDirY = cube_data->raycast.dirY + cube_data->raycast.planeY * cube_data->raycast.cameraX;
-		cube_data->raycast.mapX = (int)cube_data->raycast.posX;
-		cube_data->raycast.mapY = (int)cube_data->raycast.posY;
-		cube_data->raycast.deltaDistX = (cube_data->raycast.rayDirX == 0) ? 1e30 : fabs(1 / cube_data->raycast.rayDirX);
-		cube_data->raycast.deltaDistY = (cube_data->raycast.rayDirY == 0) ? 1e30 : fabs(1 / cube_data->raycast.rayDirY);
 
-		if(cube_data->raycast.rayDirX < 0) {
-			cube_data->raycast.stepX = -1;
-			cube_data->raycast.sideDistX = (cube_data->raycast.posX - cube_data->raycast.mapX) * cube_data->raycast.deltaDistX;
-		} else {
-			cube_data->raycast.stepX = 1;
-			cube_data->raycast.sideDistX = (cube_data->raycast.mapX + 1.0 - cube_data->raycast.posX) * cube_data->raycast.deltaDistX;
-		}
-		if(cube_data->raycast.rayDirY < 0) {
-			cube_data->raycast.stepY = -1;
-			cube_data->raycast.sideDistY = (cube_data->raycast.posY - cube_data->raycast.mapY) * cube_data->raycast.deltaDistY;
-		} else {
-			cube_data->raycast.stepY = 1;
-			cube_data->raycast.sideDistY = (cube_data->raycast.mapY + 1.0 - cube_data->raycast.posY) * cube_data->raycast.deltaDistY;
-		}
-}
-void	calculate_hit(t_cube_data* cube_data)
+void	calculate_ray(t_raycast *r)
 {
-	int x;
+	if (r->rayDirX < 0)
+	{
+		r->stepX = -1;
+		r->sideDistX = (r->posX - r->mapX) * r->deltaDistX;
+	}
+	else
+	{
+		r->stepX = 1;
+		r->sideDistX = (r->mapX + 1.0 - r->posX) * r->deltaDistX;
+	}
+	if (r->rayDirY < 0)
+	{
+		r->stepY = -1;
+		r->sideDistY = (r->posY - r->mapY) * r->deltaDistY;
+	}
+	else
+	{
+		r->stepY = 1;
+		r->sideDistY = (r->mapY + 1.0 - r->posY) * r->deltaDistY;
+	}
+}
+
+void	calculate_dda(t_cube_data *cube_data, int x)
+{
+	t_raycast	*r;
+
+	r = &cube_data->raycast;
+	r->cameraX = 2 * x / (double)cube_data->image_cube.width - 1;
+	r->rayDirX = r->dirX + r->planeX * r->cameraX;
+	r->rayDirY = r->dirY + r->planeY * r->cameraX;
+	r->mapX = (int)r->posX;
+	r->mapY = (int)r->posY;
+	if (r->rayDirX == 0)
+		r->deltaDistX = 1e30;
+	else
+		r->deltaDistX = fabs(1 / r->rayDirX);
+	if (r->rayDirY == 0)
+		r->deltaDistY = 1e30;
+	else
+		r->deltaDistY = fabs(1 / r->rayDirY);
+	calculate_ray(r);
+}
+
+uint32_t	change_color(t_cube_data *cube_data, t_raycast *r)
+{
+	if (cube_data->map[r->mapY][r->mapX] == 1)
+		r->color = ft_pixel(255, 0, 0, 255);
+	else if (cube_data->map[r->mapY][r->mapX] == 2)
+		r->color = ft_pixel(0, 255, 0, 255);
+	else if (cube_data->map[r->mapY][r->mapX] == 3)
+		r->color = ft_pixel(0, 0, 255, 255);
+	else
+		r->color = ft_pixel(255, 255, 255, 255);
+}
+
+void	calculate_hit(t_cube_data *cube_data)
+{
+	int			x;
+	t_raycast	*r;
+
+	r = &cube_data->raycast;
 
 	x = 0;
 	while (x < cube_data->image_cube.width)
 	{
 		calculate_dda(cube_data, x);
-		cube_data->raycast.hit = 0;
-		while(cube_data->raycast.hit == 0) {
-			if(cube_data->raycast.sideDistX < cube_data->raycast.sideDistY) {
-				cube_data->raycast.sideDistX += cube_data->raycast.deltaDistX;
-				cube_data->raycast.mapX += cube_data->raycast.stepX;
-				cube_data->raycast.side = 0;
-			} else {
-				cube_data->raycast.sideDistY += cube_data->raycast.deltaDistY;
-				cube_data->raycast.mapY += cube_data->raycast.stepY;
-				cube_data->raycast.side = 1;
-			}
-			if (cube_data->raycast.mapY >= 0 && cube_data->raycast.mapY < cube_data->map_height && cube_data->raycast.mapX >= 0 && cube_data->raycast.mapX < cube_data->map_width) {
-				if(cube_data->map[cube_data->raycast.mapY][cube_data->raycast.mapX] > 0) cube_data->raycast.hit = 1; // [Y][X] Correto
-			} else break;
-		}
-		if(cube_data->raycast.side == 0) cube_data->raycast.perpWallDist = (cube_data->raycast.sideDistX - cube_data->raycast.deltaDistX);
-		else          cube_data->raycast.perpWallDist = (cube_data->raycast.sideDistY - cube_data->raycast.deltaDistY);
-
-		cube_data->raycast.lineHeight = (int)(cube_data->image_cube.height / cube_data->raycast.perpWallDist);
-
-		cube_data->raycast.drawStart = -cube_data->raycast.lineHeight / 2 + cube_data->image_cube.height / 2;
-		if(cube_data->raycast.drawStart < 0) cube_data->raycast.drawStart = 0;
-		cube_data->raycast.drawEnd = cube_data->raycast.lineHeight / 2 + cube_data->image_cube.height / 2;
-		if(cube_data->raycast.drawEnd >= cube_data->image_cube.height) cube_data->raycast.drawEnd = cube_data->image_cube.height - 1;
-		switch(cube_data->map[cube_data->raycast.mapY][cube_data->raycast.mapX])
+		r->hit = 0;
+		while (r->hit == 0)
 		{
-			case 1:  cube_data->raycast.color = ft_pixel(255, 0, 0, 255);    break;
-			case 2:  cube_data->raycast.color = ft_pixel(0, 255, 0, 255);    break;
-			case 3:  cube_data->raycast.color = ft_pixel(0, 0, 255, 255);    break;
-			default: cube_data->raycast.color = ft_pixel(255, 255, 255, 255); break;
+			if (r->sideDistX < r->sideDistY)
+			{
+				r->sideDistX += r->deltaDistX;
+				r->mapX += r->stepX;
+				r->side = 0;
+			}
+			else
+			{
+				r->sideDistY += r->deltaDistY;
+				r->mapY += r->stepY;
+				r->side = 1;
+			}
+			if (r->mapY >= 0 && r->mapY < cube_data->map_height && r->mapX >= 0
+				&& r->mapX < cube_data->map_width)
+			{
+				if (cube_data->map[r->mapY][r->mapX] > 0)
+					r->hit = 1;
+			}
+			else
+				break ;
 		}
-		if(cube_data->raycast.side == 1) cube_data->raycast.color = (cube_data->raycast.color >> 1) & 0x7F7F7FFF;
-		verLine(cube_data->image_cube.image, x, cube_data->raycast.drawStart, cube_data->raycast.drawEnd, cube_data->raycast.color);
+		if (r->side == 0)
+			r->perpWallDist = (r->sideDistX - r->deltaDistX);
+		else
+			r->perpWallDist = (r->sideDistY - r->deltaDistY);
+
+		r->lineHeight = (int)(cube_data->image_cube.height / r->perpWallDist);
+
+		r->drawStart = -r->lineHeight / 2 + cube_data->image_cube.height / 2;
+		if (r->drawStart < 0)
+			r->drawStart = 0;
+		r->drawEnd = r->lineHeight / 2 + cube_data->image_cube.height / 2;
+		if (r->drawEnd >= cube_data->image_cube.height)
+			r->drawEnd = cube_data->image_cube.height - 1;
+		change_color(cube_data, r);
+		if (r->side == 1)
+		r->color = (r->color >> 1) & 0x7F7F7FFF;
+		ver_line(cube_data->image_cube.image, x, &cube_data->raycast);
 		x++;
 	}
 }
