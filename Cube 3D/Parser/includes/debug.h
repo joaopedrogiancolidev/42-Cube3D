@@ -23,11 +23,17 @@
 	ft_printf(DBG_COLOR_GREEN "[MAP GRID] width=%d height=%d" DBG_COLOR_RESET "\n", width, height)
 #  define DBG_MAP_GRID_LINE(index, line) \
 	ft_printf(DBG_COLOR_GREEN "[MAP %d] |%s|" DBG_COLOR_RESET "\n", index, line)
+#  define DBG_MAP_VALIDATE_CHAR(row, col, c) \
+	ft_printf(DBG_COLOR_YELLOW "[MAP VALIDATE] invalid '%c' at row=%d col=%d" DBG_COLOR_RESET "\n", c, row, col)
+#  define DBG_MAP_VALIDATE_SPAWN(count) \
+	ft_printf(DBG_COLOR_YELLOW "[MAP VALIDATE] spawn_count=%d" DBG_COLOR_RESET "\n", count)
 # else
 #  define DBG_LINE(fn, line, result) ((void)0)
 #  define DBG_CLASSIFIED_LINE(line_no, line_type, line) ((void)0)
 #  define DBG_MAP_GRID_INFO(width, height) ((void)0)
 #  define DBG_MAP_GRID_LINE(index, line) ((void)0)
+#  define DBG_MAP_VALIDATE_CHAR(row, col, c) ((void)0)
+#  define DBG_MAP_VALIDATE_SPAWN(count) ((void)0)
 # endif
 
 #endif

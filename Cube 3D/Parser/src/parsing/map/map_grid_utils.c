@@ -12,6 +12,10 @@
 
 #include "parser.h"
 
+/*
+** Initializes map accumulator used while reading MAP lines.
+** Called once by load_file_lines() before any map content is processed.
+*/
 void	init_map_grid(t_map_grid *map)
 {
 	map->lines = NULL;
@@ -19,6 +23,10 @@ void	init_map_grid(t_map_grid *map)
 	map->width = 0;
 }
 
+/*
+** Frees accumulated/normalized map memory and resets fields.
+** Called on all parser exits to guarantee cleanup.
+*/
 void	free_map_grid(t_map_grid *map)
 {
 	int	i;
@@ -35,6 +43,10 @@ void	free_map_grid(t_map_grid *map)
 	map->width = 0;
 }
 
+/*
+** Duplicates one map line while stripping trailing '\n'.
+** Used by add_map_line() so map storage is independent from file newlines.
+*/
 static char	*dup_line_without_newline(char *line)
 {
 	int		len;
@@ -52,6 +64,10 @@ static char	*dup_line_without_newline(char *line)
 	return (copy);
 }
 
+/*
+** Appends one map line to the dynamic map->lines array.
+** Called by load_file_lines() for each MAP-classified line.
+*/
 int	add_map_line(t_map_grid *map, char *line, int line_no)
 {
 	char	**new_lines;

@@ -17,6 +17,10 @@
 
 #include "parser.h"
 
+/*
+** Computes target width for normalization by finding the longest map row.
+** Used by extract_map_grid() before allocating the rectangular buffer.
+*/
 int	get_max_map_width(t_map_grid *map)
 {
 	int	i;
@@ -35,6 +39,10 @@ int	get_max_map_width(t_map_grid *map)
 	return (max_width);
 }
 
+/*
+** Creates one normalized row of fixed width and pads with spaces.
+** Used by extract_map_grid() for each original map line.
+*/
 static int	normalize_line(char **dst, char *src, int width)
 {
 	int	line_len;
@@ -50,6 +58,10 @@ static int	normalize_line(char **dst, char *src, int width)
 	return (0);
 }
 
+/*
+** Cleanup helper for partial allocation failures during normalization.
+** Used only by extract_map_grid() error path.
+*/
 static void	free_partial_normalized(char **lines, int count)
 {
 	int	i;
@@ -63,6 +75,10 @@ static void	free_partial_normalized(char **lines, int count)
 	free(lines);
 }
 
+/*
+** Debug-only map dump after normalization.
+** Used by extract_map_grid() to make Day 3 output easy to verify visually.
+*/
 static void	debug_print_map_grid(t_map_grid *map)
 {
 	int	i;
@@ -76,6 +92,12 @@ static void	debug_print_map_grid(t_map_grid *map)
 	}
 }
 
+/*
+** Day 3 normalization entry point.
+** Called by load_file_lines() after map accumulation is complete.
+** Why it exists: convert ragged input rows into a rectangular grid used by
+** later validations (Day 4+).
+*/
 int	extract_map_grid(t_map_grid *map)
 {
 	char	**normalized;

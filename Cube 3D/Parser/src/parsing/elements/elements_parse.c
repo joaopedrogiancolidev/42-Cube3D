@@ -1,5 +1,9 @@
 #include "parser.h"
 
+/*
+** Utility shared by parsing helpers to skip leading indentation.
+** Used before key/value extraction in element lines.
+*/
 static char	*skip_spaces(char *line)
 {
 	while (*line == ' ' || *line == '\t')
@@ -7,6 +11,10 @@ static char	*skip_spaces(char *line)
 	return (line);
 }
 
+/*
+** Stores one parsed element value and protects against duplicates.
+** Called by parse_element_line() once the key has been identified.
+*/
 static int	set_element_value(char **dst, char *value, const char *key,
 		int line_no)
 {
@@ -24,6 +32,11 @@ static int	set_element_value(char **dst, char *value, const char *key,
 	return (0);
 }
 
+/*
+** Day 2 element parser.
+** Used by load_file_lines() when line_type is ELEMENT.
+** Why it exists: isolate element-key decoding from line reader flow.
+*/
 int	parse_element_line(t_parser_config *cfg, char *line, int line_no)
 {
 	char	*start;

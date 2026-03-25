@@ -1,5 +1,9 @@
 #include "parser.h"
 
+/*
+** Emits missing-element error for one key if its value is NULL.
+** Used by validate_required_elements() to keep checks compact.
+*/
 static int	print_missing_if_null(char *value, const char *key)
 {
 	if (!value)
@@ -10,6 +14,10 @@ static int	print_missing_if_null(char *value, const char *key)
 	return (0);
 }
 
+/*
+** Day 2 post-parse validation for required config keys.
+** Called by load_file_lines() after the file has been read.
+*/
 int	validate_required_elements(t_parser_config *cfg)
 {
 	int	has_error;

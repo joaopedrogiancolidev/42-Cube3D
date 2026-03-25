@@ -13,6 +13,7 @@ SRCS = $(SRC_DIR)/main_parser.c \
 	$(SRC_DIR)/parsing/elements/elements_validate.c \
 	$(SRC_DIR)/parsing/map/map_grid_utils.c \
 	$(SRC_DIR)/parsing/map/map_extract.c \
+	$(SRC_DIR)/parsing/map/map_validate.c \
 	$(SRC_DIR)/parsing/utils/parser_errors.c
 OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 LIBFT_DIR = ../../libft

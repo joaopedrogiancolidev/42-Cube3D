@@ -1,5 +1,5 @@
 /*
-** read_lines.c - Main parser orchestration (Dias 1-3)
+** read_lines.c - Main parser orchestration (Days 1-4)
 ** 
 ** load_file_lines(fd):
 **   Orchestrates the entire parsing flow:
@@ -20,6 +20,48 @@
 */
 
 #include "parser.h"
+
+/*
+** Small local helper used only by report_invalid_line().
+** Keeps the map charset rule close to INVALID-line reporting logic,
+** so line-based errors can still report an exact offending character.
+*/
+static int	is_map_allowed_char(char c)
+{
+	return (c == '0' || c == '1' || c == 'N' || c == 'S' || c == 'E'
+		|| c == 'W' || c == ' ');
+}
+
+/*
+** Called when line_type_name() returns INVALID.
+**
+** Why it exists:
+** - Before map starts: we only know the whole line is invalid.
+** - After map starts: we provide a specific map-character error with column.
+**
+** This improves Day 4 diagnostics without changing Day 1-3 classification flow.
+*/
+static void	report_invalid_line(char *line, int line_no, int has_map_started)
+{
+	int	col;
+
+	if (!has_map_started)
+	{
+		parser_error_invalid_line(line_no);
+		return ;
+	}
+	col = 0;
+	while (line[col] != '\0' && line[col] != '\n')
+	{
+		if (!is_map_allowed_char(line[col]))
+		{
+			parser_error_map_invalid_char(line_no, col + 1, line[col]);
+			return ;
+		}
+		col++;
+	}
+	parser_error_invalid_line(line_no);
+}
 
 int	load_file_lines(int fd)
 {
@@ -59,7 +101,7 @@ int	load_file_lines(int fd)
 		if (ft_strncmp(line_type, "INVALID", 8) == 0)
 		{
 			has_invalid = 1;
-			parser_error_invalid_line(line_no);
+			report_invalid_line(line, line_no, has_map_started);
 		}
 		DBG_CLASSIFIED_LINE(line_no, line_type, line);
 		free(line);
@@ -73,6 +115,9 @@ int	load_file_lines(int fd)
 		has_invalid = 1;
 		parser_error_malloc("MAP", line_no);
 	}
+	/* Day 4 runs on normalized map to guarantee stable row/col iteration. */
+	if (!has_invalid && validate_map_charset_and_spawn(&map) != 0)
+		has_invalid = 1;
 	free_parser_config(&cfg);
 	free_map_grid(&map);
 	return (has_invalid);

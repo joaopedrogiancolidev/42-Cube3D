@@ -6,6 +6,7 @@
 # include "parser_config.h"
 # include "elements.h"
 # include "map_grid.h"
+# include "map_validate.h"
 # include "parser_errors.h"
 # include "libft.h"
 # include <fcntl.h>

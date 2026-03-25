@@ -1,5 +1,9 @@
 #include "parser.h"
 
+/*
+** Initializes the element configuration structure to a safe empty state.
+** Called once at the start of load_file_lines().
+*/
 void	init_parser_config(t_parser_config *cfg)
 {
 	cfg->no_path = NULL;
@@ -10,6 +14,10 @@ void	init_parser_config(t_parser_config *cfg)
 	cfg->c_raw = NULL;
 }
 
+/*
+** Releases every dynamically stored element value.
+** Called on all parser exits (success and error) to avoid leaks.
+*/
 void	free_parser_config(t_parser_config *cfg)
 {
 	free(cfg->no_path);
