@@ -67,7 +67,7 @@ typedef struct s_raycast
 
 typedef struct s_cube_data
 {
-	int				map[24][24];
+	int				**map;
 	int				map_width;
 	int				map_height;
 	int				win_width;
@@ -77,7 +77,7 @@ typedef struct s_cube_data
 	mlx_t			*mlx;
 }	t_cube_data;
 
-t_cube_data	parser(int argc, char **argv);
+int			parser(int argc, char **argv, t_cube_data *cube_data);
 void		free_all(t_cube_data *cube_data);
 void		ver_line(mlx_image_t	*img, int x, t_raycast *raycast);
 

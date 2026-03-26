@@ -3,15 +3,26 @@ NAME    := game
 CFLAGS  := 
 
 LIBMLX  := ./MLX42
+LIBFT_DIR := ../Cube3D/libft
+PRINTF_DIR := $(LIBFT_DIR)/printf
+LIBFT := $(LIBFT_DIR)/libft.a
+LIBPRINTF := $(PRINTF_DIR)/libftprintf.a
 OBJDIR  := obj
 
-HEADERS := -I ./include -I $(LIBMLX)/include
-LIBS    := $(LIBMLX)/build/libmlx42.a -ldl -lglfw -pthread -lm
+HEADERS := -I ./include -I $(LIBMLX)/include -I ./src/Parser/includes -I $(LIBFT_DIR) -I $(PRINTF_DIR)/includes
+LIBS    := $(LIBMLX)/build/libmlx42.a $(LIBFT) $(LIBPRINTF) -ldl -lglfw -pthread -lm
 
-SRCS    := $(shell find src -type f -name "*.c")
+SRCS_CORE := $(shell find src -type f -name "*.c" ! -path "src/Parser/*")
+SRCS_PARSER := $(shell find src/Parser/src/parsing -type f -name "*.c")
+SRCS    := $(SRCS_CORE) $(SRCS_PARSER)
 
 OBJS    := $(SRCS:src/%.c=$(OBJDIR)/%.o)
-all: libmlx $(NAME)
+all: libs libmlx $(NAME)
+
+libs:
+	@$(MAKE) -C $(LIBFT_DIR)
+	@$(MAKE) -C $(PRINTF_DIR)
+
 libmlx:
 	@if [ ! -d "$(LIBMLX)/build" ]; then \
 		cmake $(LIBMLX) -B $(LIBMLX)/build; \
@@ -38,4 +49,4 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re libmlx
+.PHONY: all libs clean fclean re libmlx
