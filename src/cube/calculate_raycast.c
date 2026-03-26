@@ -6,7 +6,7 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 16:22:37 by armeneze          #+#    #+#             */
-/*   Updated: 2026/03/25 18:37:55 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/26 11:46:29 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,8 +57,6 @@ void	calculate_dda(t_cube_data *cube_data, int x)
 	calculate_side_dist(r);
 }
 
-
-
 void	calculate_hit(t_raycast *r, t_cube_data *cube_data)
 {
 	r->hit = 0;
@@ -89,23 +87,23 @@ void	calculate_hit(t_raycast *r, t_cube_data *cube_data)
 
 void	calculate_draw_start_end(t_raycast *r, t_cube_data *cube_data)
 {
-	int	pitch;
+	int			pitch;
+	uint32_t	ima_height;
 
+	ima_height = cube_data->image_cube.height;
 	pitch = 0;
 	if (r->side == 0)
 		r->perp_wall_dist = (r->side_dist_x - r->delta_dist_x);
 	else
 		r->perp_wall_dist = (r->side_dist_y - r->delta_dist_y);
-	r->line_height = (int)(cube_data->image_cube.height
-			/ r->perp_wall_dist);
-	r->draw_start = -r->line_height / 2 + cube_data->image_cube.height
-		/ 2 + pitch;
+	r->line_height = (int)(ima_height / r->perp_wall_dist);
+	r->draw_start = -r->line_height / 2 + ima_height / 2 + pitch;
 	if (r->draw_start < 0)
 		r->draw_start = 0;
-	r->draw_end = r->line_height / 2 + cube_data->image_cube.height
+	r->draw_end = r->line_height / 2 + ima_height
 		/ 2 + pitch;
-	if (r->draw_end >= cube_data->image_cube.height)
-		r->draw_end = cube_data->image_cube.height - 1;
+	if (r->draw_end >= ima_height)
+		r->draw_end = ima_height - 1;
 }
 
 void	calculate_raycast(t_cube_data *cube_data)

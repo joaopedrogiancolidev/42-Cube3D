@@ -6,7 +6,7 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/19 14:34:50 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/25 16:19:46 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/26 11:43:35 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ void	refresh_pixel(void *param)
 	int			y;
 	int			x;
 
-	color = ft_pixel(225, 30, 0, 255);
+	color = ft_pixel(126, 221, 225, 255);
 	cube_data = param;
 	y = 0;
 	x = 0;
@@ -49,7 +49,7 @@ void	refresh_pixel(void *param)
 		while (x < cube_data->image_cube.width)
 		{
 			if (y > cube_data->image_cube.height / 2)
-				color = ft_pixel(220, 100, 0, 255);
+				color = ft_pixel(134, 225, 126, 255);
 			mlx_put_pixel(cube_data->image_cube.image, x, y, color);
 			x ++;
 		}
