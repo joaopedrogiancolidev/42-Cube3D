@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   calculate_movement.c                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/19 13:45:12 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/26 11:46:43 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/26 18:55:40 by jgiancol         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,12 +96,12 @@ void	calculate_rotation_and_movement(t_cube_data *cube_data)
 		key_up_move_position(cube_data);
 	if (mlx_is_key_down(mlx, MLX_KEY_S))
 		key_down_move_position(cube_data);
-	if (mlx_is_key_down(mlx, MLX_KEY_D))
-		key_left_move_position(cube_data);
 	if (mlx_is_key_down(mlx, MLX_KEY_A))
+		key_left_move_position(cube_data);
+	if (mlx_is_key_down(mlx, MLX_KEY_D))
 		key_rigth_move_position(cube_data);
-	if (mlx_is_key_down(mlx, MLX_KEY_RIGHT))
-		key_rigth_move_point_view(cube_data);
 	if (mlx_is_key_down(mlx, MLX_KEY_LEFT))
+		key_rigth_move_point_view(cube_data);
+	if (mlx_is_key_down(mlx, MLX_KEY_RIGHT))
 		key_left_move_point_view(cube_data);
 }
