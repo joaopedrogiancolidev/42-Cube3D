@@ -1,0 +1,1 @@
+ ./game src/sample_maps/valid_arthur.cub (para testar o mapa)
