@@ -6,7 +6,7 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/18 17:12:10 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/25 16:29:06 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/26 17:19:03 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,20 @@ typedef struct s_image_cube
 	uint32_t			width;
 	uint32_t			height;
 }	t_image_cube;
+
+typedef struct s_image_mini_mapa
+{
+	mlx_image_t			*image;
+	uint32_t			width;
+	uint32_t			height;
+}	t_image_mini_mapa;
+
+typedef struct s_player
+{
+	mlx_image_t			*image;
+	uint32_t			width;
+	uint32_t			height;
+}	t_player;
 
 typedef struct s_raycast
 {
@@ -67,14 +81,16 @@ typedef struct s_raycast
 
 typedef struct s_cube_data
 {
-	int				map[24][24];
-	int				map_width;
-	int				map_height;
-	int				win_width;
-	int				win_height;
-	t_image_cube	image_cube;
-	t_raycast		raycast;
-	mlx_t			*mlx;
+	int					map[100][100];
+	int					map_width;
+	int					map_height;
+	int					win_width;
+	int					win_height;
+	t_image_cube		image_cube;
+	t_raycast			raycast;
+	mlx_t				*mlx;
+	t_image_mini_mapa	minimap;
+	t_player			player;
 }	t_cube_data;
 
 t_cube_data	parser(int argc, char **argv);

@@ -6,7 +6,7 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/19 13:45:12 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/26 11:46:43 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/26 16:38:15 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,8 @@ void	key_up_move_position(t_cube_data *cube_data)
 	{
 		r->pos_x += r->dir_x * r->move_speed;
 	}
-	if (cube_data->map[(int)(r->pos_y + r->dir_y
-			* r->move_speed)][(int)r->pos_x] == 0)
+	if (cube_data->map[(int)(r->pos_y + r->dir_y * r->move_speed)]
+		[(int)r->pos_x] == 0)
 	{
 		r->pos_y += r->dir_y * r->move_speed;
 	}
