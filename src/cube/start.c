@@ -6,7 +6,7 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/19 11:02:57 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/25 16:27:32 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/27 11:02:32 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,19 +29,10 @@ void	raycast(void *param)
 int	start_cube(t_cube_data *cube_data)
 {
 	init_mlx(cube_data);
-	if (!cube_data->mlx)
+	if (!cube_data->mlx || create_image_cube_minimap(cube_data))
 		return (EXIT_FAILURE);
-	cube_data->image_cube.width = cube_data->mlx->width;
-	cube_data->image_cube.height = cube_data->mlx->height;
-	cube_data->image_cube.image = create_image(cube_data->mlx,
-			cube_data->image_cube.width, cube_data->image_cube.height);
-	if (!cube_data->image_cube.image)
-	{
-		mlx_close_window(cube_data->mlx);
-		return (EXIT_FAILURE);
-	}
-	mlx_image_to_window(cube_data->mlx, cube_data->image_cube.image, 0, 0);
 	mlx_loop_hook(cube_data->mlx, raycast, cube_data);
 	mlx_loop(cube_data->mlx);
 	mlx_terminate(cube_data->mlx);
+	return (0);
 }

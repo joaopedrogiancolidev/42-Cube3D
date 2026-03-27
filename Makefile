@@ -3,7 +3,7 @@ NAME    := game
 CFLAGS  := 
 
 LIBMLX  := ./MLX42
-LIBFT_DIR := ../Cube3D/libft
+LIBFT_DIR := ./libft
 PRINTF_DIR := $(LIBFT_DIR)/printf
 LIBFT := $(LIBFT_DIR)/libft.a
 LIBPRINTF := $(PRINTF_DIR)/libftprintf.a

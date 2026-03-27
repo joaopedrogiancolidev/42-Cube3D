@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cube3d.h                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
+/*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/18 17:12:10 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/26 18:59:01 by jgiancol         ###   ########.fr       */
+/*   Updated: 2026/03/27 11:04:57 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,13 @@ typedef struct s_image_cube
 	uint32_t			width;
 	uint32_t			height;
 }	t_image_cube;
+
+typedef struct s_image
+{
+	mlx_image_t			*image;
+	uint32_t			width;
+	uint32_t			height;
+}	t_image;
 
 typedef struct s_raycast
 {
@@ -74,6 +81,8 @@ typedef struct s_cube_data
 	int				win_width;
 	int				win_height;
 	t_image_cube	image_cube;
+	t_image			minimap;
+	t_image			player;
 	t_raycast		raycast;
 	mlx_t			*mlx;
 }	t_cube_data;

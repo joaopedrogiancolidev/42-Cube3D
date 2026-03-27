@@ -6,13 +6,13 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 16:42:12 by armeneze          #+#    #+#             */
-/*   Updated: 2026/03/25 16:44:41 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/27 10:59:33 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cube3d.h"
 
-uint32_t	change_color(t_cube_data *cube_data, t_raycast *r)
+void	change_color(t_cube_data *cube_data, t_raycast *r)
 {
 	if (cube_data->map[r->map_y][r->map_x] == 1)
 		r->color = ft_pixel(255, 0, 0, 255);
