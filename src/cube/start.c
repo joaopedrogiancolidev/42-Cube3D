@@ -6,7 +6,7 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/19 11:02:57 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/25 16:27:32 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/29 15:03:49 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,23 +24,17 @@ void	raycast(void *param)
 	refresh_pixel(cube_data);
 	calculate_raycast(cube_data);
 	calculate_rotation_and_movement(cube_data);
+	ft_memset(cube_data->minimap->pixels, 0, cube_data->minimap->width * cube_data->minimap->height * sizeof(int));
+	draw_moving_minimap(cube_data);
 }
 
 int	start_cube(t_cube_data *cube_data)
 {
 	init_mlx(cube_data);
-	if (!cube_data->mlx)
+	if (!cube_data->mlx || create_image_cube(cube_data) == EXIT_FAILURE)
 		return (EXIT_FAILURE);
-	cube_data->image_cube.width = cube_data->mlx->width;
-	cube_data->image_cube.height = cube_data->mlx->height;
-	cube_data->image_cube.image = create_image(cube_data->mlx,
-			cube_data->image_cube.width, cube_data->image_cube.height);
-	if (!cube_data->image_cube.image)
-	{
-		mlx_close_window(cube_data->mlx);
+	if (!cube_data->mlx || create_minimap(cube_data) == EXIT_FAILURE)
 		return (EXIT_FAILURE);
-	}
-	mlx_image_to_window(cube_data->mlx, cube_data->image_cube.image, 0, 0);
 	mlx_loop_hook(cube_data->mlx, raycast, cube_data);
 	mlx_loop(cube_data->mlx);
 	mlx_terminate(cube_data->mlx);
