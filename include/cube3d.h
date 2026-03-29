@@ -6,7 +6,7 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/18 17:12:10 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/29 15:11:50 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/29 15:35:12 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,15 @@ typedef struct s_raycast
 	double		olddir_x;
 	double		oldplane_x;	
 }	t_raycast;
+
+typedef struct s_data_minimap
+{
+	int	x;
+	int	y;
+	int	view_dist;
+	int	map_x;
+	int	map_y;
+}	t_data_minimap;	
 
 typedef struct s_cube_data
 {
