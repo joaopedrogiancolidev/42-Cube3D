@@ -6,7 +6,7 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/29 14:05:05 by armeneze          #+#    #+#             */
-/*   Updated: 2026/03/29 15:16:49 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/29 15:17:28 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,6 +123,26 @@ int	create_minimap(t_cube_data *cube_data)
 	}
 	draw_moving_minimap(cube_data);
 	mlx_image_to_window(cube_data->mlx, cube_data->minimap, 20, 20);
+
+		cube_data->player = create_image(cube_data->mlx,5, 5);
+	if (!cube_data->player)
+	{
+		mlx_close_window(cube_data->mlx);
+		return (EXIT_FAILURE);
+	}
+	int x = 0;
+	int y = 0;
+	while (x < 3)
+	{
+		y = 0;
+		while (y < 3)
+		{
+			mlx_put_pixel(cube_data->player, x, y, ft_pixel(255, 255, 255, 255));
+			y++;
+		}
+		x++;
+	}
+	mlx_image_to_window(cube_data->mlx, cube_data->player, 20, 20);
 	
 	return (EXIT_SUCCESS);
 }
