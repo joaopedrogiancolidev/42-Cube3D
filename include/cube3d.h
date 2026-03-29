@@ -6,7 +6,7 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/18 17:12:10 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/27 11:04:57 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/27 11:19:33 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ typedef struct s_image
 	uint32_t			width;
 	uint32_t			height;
 }	t_image;
+
 
 typedef struct s_raycast
 {
