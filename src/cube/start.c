@@ -6,7 +6,7 @@
 /*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/19 11:02:57 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/29 17:22:37 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/31 11:12:18 by armeneze         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,15 +23,15 @@ void	door(mlx_key_data_t keydata, void *param)
 	c = (t_cube_data *)param;
 	if (keydata.key == MLX_KEY_SPACE && keydata.action == MLX_PRESS)
 	{
-		next_x = (int)(c->raycast.pos_x + c->raycast.dir_x * 1.2);
-		next_y = (int)(c->raycast.pos_y + c->raycast.dir_y * 1.2);
+		next_x = (int)(c->raycast.pos_x + c->raycast.dir_x * 1);
+		next_y = (int)(c->raycast.pos_y + c->raycast.dir_y * 1);
 		if (c->map[next_y][next_x] == 1)
 		{
 			c->map[next_y][next_x] = 3;
 		}
 		else if (c->map[next_y][next_x] == 3)
 		{
-			c->map[next_y][next_x] = 2;
+			c->map[next_y][next_x] = 1;
 		}
 	}
 }
