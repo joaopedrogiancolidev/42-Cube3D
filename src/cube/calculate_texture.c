@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   calculate_texture.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 16:42:12 by armeneze          #+#    #+#             */
-/*   Updated: 2026/03/25 16:44:41 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/04/01 10:02:39 by jgiancol         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,4 +24,5 @@ uint32_t	change_color(t_cube_data *cube_data, t_raycast *r)
 		r->color = ft_pixel(255, 255, 255, 255);
 	if (r->side == 1)
 		r->color = (r->color >> 1) & 0x7F7F7FFF;
+	return (r->color);
 }

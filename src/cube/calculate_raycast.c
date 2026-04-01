@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   calculate_raycast.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 16:22:37 by armeneze          #+#    #+#             */
-/*   Updated: 2026/03/26 11:46:29 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/04/01 10:02:39 by jgiancol         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,8 +118,13 @@ void	calculate_raycast(t_cube_data *cube_data)
 		calculate_dda(cube_data, x);
 		calculate_hit(r, cube_data);
 		calculate_draw_start_end(r, cube_data);
-		change_color(cube_data, r);
-		ver_line(cube_data->image_cube.image, x, &cube_data->raycast);
+		if (cube_data->map[r->map_y][r->map_x] == 1)
+			draw_textured_column(cube_data, x);
+		else
+		{
+			change_color(cube_data, r);
+			ver_line(cube_data->image_cube.image, x, &cube_data->raycast);
+		}
 		x++;
 	}
 }

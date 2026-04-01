@@ -115,14 +115,17 @@ static char	*build_source_relative_path(const char *source_path,
 
 /*
 ** Validates that one texture path is non-empty and can be opened for reading.
-** This enforces mandatory texture-path configuration sanity.
+** If the original path cannot be opened but a source-relative variant exists,
+** the config is updated to store the resolved path so runtime code can use it.
 */
-static int	validate_texture_path(char *path, const char *key,
+static int	validate_texture_path(char **path_ref, const char *key,
 		const char *source_path)
 {
 	int		fd;
 	char	*resolved;
+	char	*path;
 
+	path = *path_ref;
 	if (!path || path[0] == '\0')
 	{
 		parser_error_invalid_texture(key, "<empty>");
@@ -147,7 +150,9 @@ static int	validate_texture_path(char *path, const char *key,
 		parser_error_invalid_texture(key, path);
 		return (1);
 	}
-	free(resolved);
+	/* update stored path to the resolved one for runtime usage */
+	free(*path_ref);
+	*path_ref = resolved;
 	close(fd);
 	return (0);
 }
@@ -169,10 +174,10 @@ int	validate_required_elements(t_parser_config *cfg, const char *source_path)
 	has_error |= print_missing_if_null(cfg->c_raw, "C");
 	if (!has_error)
 	{
-		has_error |= validate_texture_path(cfg->no_path, "NO", source_path);
-		has_error |= validate_texture_path(cfg->so_path, "SO", source_path);
-		has_error |= validate_texture_path(cfg->we_path, "WE", source_path);
-		has_error |= validate_texture_path(cfg->ea_path, "EA", source_path);
+		has_error |= validate_texture_path(&cfg->no_path, "NO", source_path);
+		has_error |= validate_texture_path(&cfg->so_path, "SO", source_path);
+		has_error |= validate_texture_path(&cfg->we_path, "WE", source_path);
+		has_error |= validate_texture_path(&cfg->ea_path, "EA", source_path);
 	}
 	if (!has_error)
 	{

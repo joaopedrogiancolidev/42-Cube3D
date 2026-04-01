@@ -6,7 +6,7 @@
 /*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/18 17:30:32 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/26 18:23:00 by jgiancol         ###   ########.fr       */
+/*   Updated: 2026/04/01 10:23:10 by jgiancol         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,6 +95,7 @@ int	parser(int argc, char **argv, t_cube_data *cube_data)
 {
 	t_parser_config	cfg;
 	t_map_grid		map_grid;
+	int				i;
 
 	ft_memset(cube_data, 0, sizeof(*cube_data));
 	if (argc != 2)
@@ -104,6 +105,22 @@ int	parser(int argc, char **argv, t_cube_data *cube_data)
 	}
 	if (parse_cub_file_data(argv[1], &cfg, &map_grid) != 0)
 		return (1);
+	/* transfer parser config (textures + colors) into runtime cube_data */
+	cube_data->no_path = cfg.no_path;
+	cfg.no_path = NULL;
+	cube_data->so_path = cfg.so_path;
+	cfg.so_path = NULL;
+	cube_data->we_path = cfg.we_path;
+	cfg.we_path = NULL;
+	cube_data->ea_path = cfg.ea_path;
+	cfg.ea_path = NULL;
+	i = 0;
+	while (i < 3)
+	{
+		cube_data->floor_rgb[i] = cfg.floor_rgb[i];
+		cube_data->ceiling_rgb[i] = cfg.ceiling_rgb[i];
+		i++;
+	}
 	cube_data->map_width = map_grid.width;
 	cube_data->map_height = map_grid.height;
 	cube_data->raycast.old_time = 0;

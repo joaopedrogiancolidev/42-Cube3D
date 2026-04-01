@@ -3,14 +3,47 @@
 /*                                                        :::      ::::::::   */
 /*   start.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/19 11:02:57 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/31 11:12:18 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/04/01 10:27:11 by jgiancol         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cube3d.h"
+
+// mltx_txture_t -> texture
+// carrega em mlx_load_png
+// image = mlx_texture_to_image(mlx, textura)
+
+static int	load_wall_textures(t_cube_data *cube_data)
+{
+	cube_data->tex_no = mlx_load_png(cube_data->no_path);
+	if (!cube_data->tex_no)
+	{
+		printf("Error\nfailed to load NO texture: %s\n", mlx_strerror(mlx_errno));
+		return (EXIT_FAILURE);
+	}
+	cube_data->tex_so = mlx_load_png(cube_data->so_path);
+	if (!cube_data->tex_so)
+	{
+		printf("Error\nfailed to load SO texture: %s\n", mlx_strerror(mlx_errno));
+		return (EXIT_FAILURE);
+	}
+	cube_data->tex_we = mlx_load_png(cube_data->we_path);
+	if (!cube_data->tex_we)
+	{
+		printf("Error\nfailed to load WE texture: %s\n", mlx_strerror(mlx_errno));
+		return (EXIT_FAILURE);
+	}
+	cube_data->tex_ea = mlx_load_png(cube_data->ea_path);
+	if (!cube_data->tex_ea)
+	{
+		printf("Error\nfailed to load EA texture: %s\n", mlx_strerror(mlx_errno));
+		return (EXIT_FAILURE);
+	}
+	return (EXIT_SUCCESS);
+}
 
 void	door(mlx_key_data_t keydata, void *param)
 {
@@ -19,8 +52,8 @@ void	door(mlx_key_data_t keydata, void *param)
 	int			next_y;
 	mlx_t		*mlx;
 
-	mlx = c->mlx;
 	c = (t_cube_data *)param;
+	mlx = c->mlx;
 	if (keydata.key == MLX_KEY_SPACE && keydata.action == MLX_PRESS)
 	{
 		next_x = (int)(c->raycast.pos_x + c->raycast.dir_x * 1);
@@ -56,6 +89,8 @@ void	raycast(void *param)
 int	start_cube(t_cube_data *cube_data)
 {
 	init_mlx(cube_data);
+	if (load_wall_textures(cube_data) == EXIT_FAILURE)
+		return (EXIT_FAILURE);
 	if (!cube_data->mlx || create_image_cube(cube_data) == EXIT_FAILURE)
 		return (EXIT_FAILURE);
 	if (!cube_data->mlx || create_minimap(cube_data) == EXIT_FAILURE)

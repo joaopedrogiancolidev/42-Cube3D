@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   raycasting.h                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: armeneze <armeneze@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/19 11:05:01 by arthur            #+#    #+#             */
-/*   Updated: 2026/03/25 16:45:27 by armeneze         ###   ########.fr       */
+/*   Updated: 2026/03/31 15:36:23 by jgiancol         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,5 +24,6 @@ void		calculate_rotation_and_movement(t_cube_data *cube_data);
 void		key_rigth_move_point_view(t_cube_data *cube_data);
 void		key_left_move_point_view(t_cube_data *cube_data);
 uint32_t	change_color(t_cube_data *cube_data, t_raycast *r);
+void		draw_textured_column(t_cube_data *cube_data, int x);
 
 #endif
