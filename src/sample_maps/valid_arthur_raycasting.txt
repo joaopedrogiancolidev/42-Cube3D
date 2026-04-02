@@ -1,0 +1,352 @@
+Estudo de Raycasting e DDA no Cube3D
+====================================
+
+Este arquivo foca nas equacoes e no fluxo de raycasting para o projeto Cube3D,
+baseado nas funcoes em:
+- src/cube/calculate_raycast.c
+- src/cube/pixel.c
+- src/cube/calculate_texture.c
+- src/cube/calculate_movement.c
+- src/cube/calculate_point_view.c
+
+O objetivo e entender:
+- Como cada coluna da tela vira um raio.
+- Como o algoritmo DDA encontra a parede atingida.
+- Como a distancia e convertida em altura de parede.
+- Como a textura (ou cor) e escolhida e desenhada.
+
+
+1. Sistema de coordenadas e camera
+----------------------------------
+
+O raycasting trabalha em um mapa 2D (grade de inteiros):
+- cube_data->map[y][x]
+  - 0 = chao andavel
+  - 1 = parede
+  - 3 = porta (tambem bloqueia, no DDA)
+
+A posicao do jogador e um ponto real (double) no mapa:
+- r->pos_x, r->pos_y
+
+A direcao da camera (para onde o jogador esta olhando) e um vetor unitario:
+- r->dir_x, r->dir_y
+
+O plano da camera (perpendicular ao vetor dir) define o campo de visao (FOV):
+- r->plane_x, r->plane_y
+
+Seja a direcao inicial (por exemplo, para spawn 'N'):
+- dir = (0, -1) -> olhando para cima no mapa.
+- plane = (0.66, 0) -> plano horizontal; valor 0.66 corresponde a ~FOV de 66 graus.
+
+
+2. Mapeando a coluna da tela para um raio
+-----------------------------------------
+
+Dentro de calculate_raycast, para cada coluna x da tela (0 .. width-1) temos:
+
+- camera_x = 2 * x / (double)image_width - 1;
+  - camera_x varia aproximadamente de -1 (esquerda) ate +1 (direita).
+
+- raydir_x = dir_x + plane_x * camera_x;
+- raydir_y = dir_y + plane_y * camera_x;
+
+Isso significa:
+- O raio central (x ~ metade da tela) tem camera_x ~ 0, logo raydir ~ dir.
+- Colunas a esquerda/direita adicionam/subtraem uma parcela do plano da camera,
+  abrindo o feixe de raios (FOV).
+
+A celula inicial no mapa para esse raio e obtida por:
+- map_x = (int)pos_x;
+- map_y = (int)pos_y;
+
+
+3. Distancias incrementais (delta_dist) e DDA
+--------------------------------------------
+
+Para o DDA, precisamos saber o quanto andamos em "distancia do raio" quando
+atravessamos uma borda vertical ou horizontal da grade.
+
+A ideia:
+- delta_dist_x = |1 / raydir_x| (se raydir_x != 0, senao usa um valor muito grande).
+- delta_dist_y = |1 / raydir_y| (analogamente).
+
+Intuicao:
+- Se raydir_x e grande em modulo, o raio cruza muitas colunas rapidamente, entao
+  a distancia entre cruzamentos verticais (em termos de comprimento do raio) e pequena.
+- Se raydir_x e pequeno, essa distancia e grande.
+
+Esses valores sao calculados em calculate_dda:
+
+- Se raydir_x == 0: delta_dist_x = 1e30; (praticamente infinito)
+- Senao: delta_dist_x = fabs(1 / raydir_x);
+- O mesmo para delta_dist_y.
+
+
+4. step_x/step_y e side_dist inicial
+-------------------------------------
+
+Precisamos tambem saber:
+- Em qual direcao o raio anda em termos de indices de grade (map_x, map_y):
+  - step_x = -1 se raydir_x < 0, senao +1.
+  - step_y = -1 se raydir_y < 0, senao +1.
+
+- E a distancia, na coordenada do raio, ate o primeiro cruzamento de grid em X e Y:
+
+Se raydir_x < 0:
+- step_x = -1;
+- side_dist_x = (pos_x - map_x) * delta_dist_x;
+
+Se raydir_x > 0:
+- step_x = +1;
+- side_dist_x = (map_x + 1.0 - pos_x) * delta_dist_x;
+
+Analogamente em Y:
+- Se raydir_y < 0:
+  - step_y = -1;
+  - side_dist_y = (pos_y - map_y) * delta_dist_y;
+- Se raydir_y > 0:
+  - step_y = +1;
+  - side_dist_y = (map_y + 1.0 - pos_y) * delta_dist_y;
+
+Significado:
+- side_dist_x e a distancia (em comprimento de raio) ate cruzar a proxima
+  borda vertical do quadrado atual.
+- side_dist_y e a distancia ate a proxima borda horizontal.
+
+
+5. Algoritmo DDA para encontrar a parede (calculate_hit)
+--------------------------------------------------------
+
+O DDA (Digital Differential Analyzer) anda na grade passo a passo, sempre
+escolhendo a proxima borda de grid que o raio atinge.
+
+Pseudo-fluxo (em calculate_hit):
+
+- r->hit = 0;
+- while (r->hit == 0)
+  - Se side_dist_x < side_dist_y:
+    - side_dist_x += delta_dist_x;
+    - map_x += step_x;
+    - side = 0;  // atravessou um lado vertical
+  - Senao:
+    - side_dist_y += delta_dist_y;
+    - map_y += step_y;
+    - side = 1;  // atravessou um lado horizontal
+
+  - Verifica limites do mapa (map_x, map_y dentro de [0,width) x [0,height)).
+
+  - Se cube_data->map[map_y][map_x] > 0:
+    - r->hit = 1; // bateu em algo (parede, porta, etc.).
+
+A logica "lado com menor side_dist primeiro" garante que o DDA se move ao
+longo do raio, sempre em ordem crescente de distancia.
+
+- side == 0 -> o ultimo passo foi em X (passou uma parede vertical).
+- side == 1 -> o ultimo passo foi em Y (passou uma parede horizontal).
+
+Esse side depois e usado:
+- Para calcular a distancia perpendicular (perp_wall_dist) corretamente.
+- Para escolher qual textura usar (parede norte/sul/leste/oeste).
+- Para aplicar sombreamento (paredes vistas "de lado" mais escuras).
+
+
+6. Distancia perpendicular e altura da parede
+---------------------------------------------
+
+Depois que o DDA encontra um hit (calculate_hit), calculamos a distancia
+perpendicular a parede (calculate_draw_start_end):
+
+Se side == 0:
+- perp_wall_dist = side_dist_x - delta_dist_x;
+Senao:
+- perp_wall_dist = side_dist_y - delta_dist_y;
+
+Explicacao:
+- side_dist_x/y ja foram incrementadas uma vez a mais depois do hit,
+  entao subtrai delta_dist_x/y para voltar a distancia exata.
+
+Com a distancia perpendicular, calculamos a altura da coluna na tela:
+
+- line_height = (int)(image_height / perp_wall_dist);
+
+Isto vem da projetagem em perspectiva:
+- Quanto mais longe a parede, maior o perp_wall_dist -> menor a coluna.
+- Quanto mais perto, menor a distancia -> maior a coluna.
+
+Depois definimos onde a coluna deve comecar e terminar na tela:
+
+- draw_start = -line_height / 2 + image_height / 2 + pitch;
+- Se draw_start < 0, clampa para 0.
+
+- draw_end = line_height / 2 + image_height / 2 + pitch;
+- Se draw_end >= image_height, clampa para image_height - 1.
+
+O pitch aqui esta 0, mas poderia ser usado para inclinar a camera para cima/baixo.
+
+
+7. Desenho: cor solida vs textura
+---------------------------------
+
+Depois de ter draw_start, draw_end e side, a funcao calculate_raycast faz:
+
+- Se cube_data->map[map_y][map_x] == 1 (parede solida):
+  - draw_textured_column(cube_data, x);
+- Senao:
+  - change_color(cube_data, r);
+  - ver_line(image_cube.image, x, &cube_data->raycast);
+
+7.1. change_color (src/cube/calculate_texture.c)
+
+- Lê o valor do mapa na celula atingida:
+  - 1 -> vermelho (parede)
+  - 2 -> verde
+  - 3 -> azul
+  - outros -> branco
+- Se side == 1 (parede "de lado"), escurece a cor:
+  - color = (color >> 1) & 0x7F7F7FFF;
+
+Isso cria um efeito simples de iluminacao: paredes vistas em certo angulo
+ficam mais escuras.
+
+7.2. ver_line (src/cube/pixel.c)
+
+- Desenha uma coluna solida na imagem de x = constante, y de draw_start
+  ate draw_end, usando raycast->color.
+
+7.3. draw_textured_column (src/cube/pixel.c)
+
+Se for parede com textura (map == 1):
+
+1) Escolha da textura (norte/sul/leste/oeste):
+
+- Se side == 0 (parede vertical):
+  - Se raydir_x > 0 -> parede oeste (tex_we)
+  - Senao          -> parede leste (tex_ea)
+
+- Se side == 1 (parede horizontal):
+  - Se raydir_y > 0 -> parede sul (tex_so)
+  - Senao           -> parede norte (tex_no)
+
+2) Calculo da coordenada horizontal na parede (wall_x):
+
+- Se side == 0:
+  - wall_x = pos_y + perp_wall_dist * raydir_y;
+- Senao:
+  - wall_x = pos_x + perp_wall_dist * raydir_x;
+
+- wall_x -= floor(wall_x); // deixa apenas a parte fracionaria [0,1)
+
+3) Conversao para coordenada X da textura (tex_x):
+
+- tex_x = (int)(wall_x * tex_w);
+
+- Se for um lado especifico (para evitar textura invertida):
+  - Se side == 0 e raydir_x > 0: tex_x = tex_w - tex_x - 1;
+  - Se side == 1 e raydir_y < 0: tex_x = tex_w - tex_x - 1;
+
+4) Mapeamento vertical: step e tex_pos
+
+- step = tex_h / line_height;
+  - Quanto cada pixel de tela "sobe" na textura.
+
+- tex_pos = (draw_start - image_height/2 + line_height/2) * step;
+  - Ponto inicial na textura correspondente a draw_start.
+
+5) Loop de desenho da coluna:
+
+- Para y de draw_start ate draw_end:
+  - tex_y = (int)tex_pos;
+  - Clampa tex_y para [0, tex_h-1].
+  - tex_pos += step;
+  - color = get_texel_color(tex, tex_x, tex_y);
+  - Se side == 1, escurece a cor (sombreamento).
+  - Se (x,y) dentro da tela, desenha com mlx_put_pixel(image, x, y, color).
+
+
+8. Fundo (ceu/chao) e integracao com o raycasting
+-------------------------------------------------
+
+Antes de chamar calculate_raycast a cada frame, a funcao raycast (start.c)
+chama refresh_pixel:
+
+- refresh_pixel (src/cube/pixel.c)
+  - Calcula ceil_color a partir de cube_data->ceiling_rgb.
+  - Calcula floor_color a partir de cube_data->floor_rgb.
+  - Para cada pixel (x,y) da imagem principal:
+    - Se y estiver na metade superior, desenha ceil_color.
+    - Se y estiver na metade inferior, desenha floor_color.
+
+Depois disso, calculate_raycast desenha por cima apenas as colunas de paredes
+entre draw_start e draw_end para cada x, deixando o ceu/chao aparecendo nas
+regioes sem parede.
+
+
+9. Movimento e rotacao: como afetam o raycasting
+------------------------------------------------
+
+O raycasting depende diretamente de pos_x/pos_y, dir_x/dir_y e plane_x/plane_y.
+Esses valores sao atualizados pelas funcoes de movimento e rotacao.
+
+9.1. Movimento (W, S, A, D)
+
+- key_up_move_position (W)
+  - Testa a celula a frente na direcao (dir_x, dir_y):
+    - Se cube_data->map[ pos_y ][ pos_x + dir_x * move_speed ] == 0, avanca em x.
+    - Se cube_data->map[ pos_y + dir_y * move_speed ][ pos_x ] == 0, avanca em y.
+
+- key_down_move_position (S)
+  - Mesmo conceito, mas usando -dir_x / -dir_y.
+
+- key_left_move_position (A) / key_rigth_move_position (D)
+  - Movimentos laterais usando vetores perpendiculares (dir_y, -dir_x, etc.).
+
+9.2. Rotacao (setas esquerda/direita)
+
+- key_rigth_move_point_view (rotacao para um lado)
+- key_left_move_point_view (rotacao para o outro lado)
+
+Ambas aplicam a mesma matriz de rotacao 2D:
+
+- Seja angulo = move_speed (ou -move_speed):
+
+  - novo_dir_x   = dir_x * cos(angulo) - dir_y * sin(angulo)
+  - novo_dir_y   = olddir_x * sin(angulo) + dir_y * cos(angulo)
+
+  - novo_plane_x = plane_x * cos(angulo) - plane_y * sin(angulo)
+  - novo_plane_y = oldplane_x * sin(angulo) + plane_y * cos(angulo)
+
+Isso gira tanto a direcao da camera quanto o plano de projecao, mantendo o FOV.
+
+9.3. calculate_rotation_and_movement
+
+- time = mlx_get_time();
+- frame_time = time - old_time; old_time = time;
+- move_speed = frame_time * fator (por exemplo 3.0);
+
+- Se W/S/A/D pressionados, chama as funcoes de movimento.
+- Se setas esquerda/direita pressionadas, chama funcoes de rotacao.
+
+Como efeito, em cada frame a posicao e a direcao sao atualizadas antes do
+proximo calculate_raycast, entao os raios saem de uma nova posicao/direcao.
+
+
+10. Resumo
+----------
+
+- Cada coluna da tela representa um raio diferente, determinado por camera_x,
+  que combina a direcao base da camera (dir) com o plano da camera (plane).
+
+- O algoritmo DDA percorre a grade do mapa passo a passo, usando side_dist
+  e delta_dist para decidir se avanca em X ou Y, ate encontrar uma celula
+  de mapa > 0 (parede/porta).
+
+- A distancia perpendicular ate a parede e usada para calcular a altura
+  da coluna de parede projetada (line_height), gerando o efeito de perspectiva.
+
+- A parede pode ser desenhada com cores solidas (change_color + ver_line)
+  ou com texturas (draw_textured_column), escolhendo a textura correta
+  pelo lado atingido (N/S/E/W) e mapeando coordenadas de textura (tex_x, tex_y).
+
+- O movimento do jogador altera pos_x/pos_y e a rotacao altera dir/plane;
+  isso muda os raios lancados em cada frame, produzindo a sensacao de
+  andar e olhar ao redor em um mundo 3D projetado a partir de um mapa 2D.

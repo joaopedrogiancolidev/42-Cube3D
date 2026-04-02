@@ -6,7 +6,7 @@
 /*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/18 17:12:10 by arthur            #+#    #+#             */
-/*   Updated: 2026/04/01 10:18:41 by jgiancol         ###   ########.fr       */
+/*   Updated: 2026/04/02 10:36:41 by jgiancol         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,8 +92,8 @@ typedef struct s_cube_data
 	char			*so_path;
 	char			*we_path;
 	char			*ea_path;
-	int			floor_rgb[3];
-	int			ceiling_rgb[3];
+	int				floor_rgb[3];
+	int				ceiling_rgb[3];
 	mlx_texture_t	*tex_no;
 	mlx_texture_t	*tex_so;
 	mlx_texture_t	*tex_we;

@@ -6,7 +6,7 @@
 /*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/19 11:02:57 by arthur            #+#    #+#             */
-/*   Updated: 2026/04/01 10:27:11 by jgiancol         ###   ########.fr       */
+/*   Updated: 2026/04/02 10:24:12 by jgiancol         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 // mltx_txture_t -> texture
 // carrega em mlx_load_png
 // image = mlx_texture_to_image(mlx, textura)
-
+// mlx_load_texture png propri
 static int	load_wall_textures(t_cube_data *cube_data)
 {
 	cube_data->tex_no = mlx_load_png(cube_data->no_path);

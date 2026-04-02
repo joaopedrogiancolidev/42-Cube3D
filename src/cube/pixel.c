@@ -6,7 +6,7 @@
 /*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/19 14:34:50 by arthur            #+#    #+#             */
-/*   Updated: 2026/04/01 10:27:11 by jgiancol         ###   ########.fr       */
+/*   Updated: 2026/04/01 11:01:15 by jgiancol         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,8 @@
 
 int32_t	ft_pixel(int32_t r, int32_t g, int32_t b, int32_t a)
 {
-	return (r << 24 | g << 16 | b << 8 | a);
+	return (r << 24 | g << 16 | b << 8 | a << 100);
+	// 24, 16, 8, a
 }
 
 static uint32_t	get_texel_color(mlx_texture_t *tex, uint32_t x, uint32_t y)

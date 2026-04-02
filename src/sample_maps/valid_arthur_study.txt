@@ -1,0 +1,563 @@
+Estudo do fluxo do mapa valid_arthur.cub no projeto Cube3D
+=========================================================
+
+1. Visao geral do fluxo
+-----------------------
+
+Arquivo de entrada: src/sample_maps/valid_arthur.cub
+
+Fluxo geral:
+- main chama parser(argc, argv, &cube_data)
+- parser chama parse_cub_file_data(path, &cfg, &map_grid)
+- parse_cub_file_data chama load_file_lines_data(fd, path, ...)
+- load_file_lines_data:
+  - le o arquivo linha por linha
+  - classifica linhas como: EMPTY, ELEMENT, MAP ou INVALID
+  - acumula elementos (NO, SO, WE, EA, F, C) em t_parser_config
+  - acumula linhas de mapa em t_map_grid
+  - normaliza o mapa em grade retangular (extract_map_grid)
+  - valida charset, spawn e fechamento do mapa
+- parser copia dados de cfg e map_grid para t_cube_data
+  - paths de textura
+  - cores floor/ceiling
+  - largura/altura do mapa
+  - matriz int **map (0 = chao, 1 = parede, 3 = porta, etc.)
+  - posicao/direcao inicial do jogador (raycast)
+- start_cube inicia MLX, carrega texturas e instala hooks
+- raycast (loop) desenha a cena com raycasting e minimapa
+- free_all libera memoria e texturas ao sair
+
+
+2. Estrutura principal t_cube_data e t_raycast
+---------------------------------------------
+
+Definidas em include/cube3d.h
+
+- t_image_cube
+  - mlx_image_t *image
+  - uint32_t width, height
+  - guarda a imagem principal do jogo
+
+- t_raycast
+  - pos_x, pos_y              : posicao do jogador no mapa
+  - dir_x, dir_y              : vetor direcao da camera
+  - plane_x, plane_y          : vetor plano da camera (FOV)
+  - camera_x                  : coordenada x da coluna normalizada (-1..1)
+  - raydir_x, raydir_y        : direcao do raio para a coluna atual
+  - map_x, map_y              : celula atual do grid (int)
+  - delta_dist_x, delta_dist_y: distancia entre cruzamentos de grid
+  - side_dist_x, side_dist_y  : distancia ate o proximo side em x/y
+  - step_x, step_y            : passo (+1 ou -1) na DDA
+  - hit                       : flag se o raio bateu em algo
+  - side                      : qual lado foi atingido (0=x, 1=y)
+  - perp_wall_dist            : distancia perpendicular ate a parede
+  - line_height               : altura da coluna da parede na tela
+  - draw_start, draw_end      : limites verticais da coluna
+  - color                     : cor da coluna (quando nao usa textura)
+  - time, old_time, frame_time: controle de FPS
+  - move_speed, rot_speed     : velocidades de movimento/rotacao
+  - olddir_x, oldplane_x      : auxiliares para rotacao
+
+- t_cube_data
+  - int **map; int map_width; int map_height
+  - int win_width; int win_height
+  - t_image_cube image_cube
+  - mlx_image_t *minimap; *player
+  - t_raycast raycast
+  - mlx_t *mlx
+  - char *no_path, *so_path, *we_path, *ea_path
+  - int floor_rgb[3], ceiling_rgb[3]
+  - mlx_texture_t *tex_no, *tex_so, *tex_we, *tex_ea
+
+
+3. Parser de alto nivel (src/parser/parser.c)
+--------------------------------------------
+
+3.1. set_spawn_orientation(t_raycast *raycast, char spawn)
+- Recebe letra de spawn ('N', 'S', 'E', 'W').
+- Define dir_x/dir_y (para onde o jogador olha) e plane_x/plane_y (plano da camera).
+- Exemplo para 'N':
+  - dir_x = 0, dir_y = -1 (olhando para cima)
+  - plane_x = 0.66, plane_y = 0 (plano horizontal)
+- Motivo: centraliza a logica de como cada letra do mapa vira vetores iniciais.
+
+3.2. free_partial_map(int **map, int count)
+- Libera linhas ja alocadas de map se uma alocacao posterior falhar.
+- Usada apenas em caso de erro em copy_runtime_map.
+
+3.3. copy_runtime_map(t_cube_data *cube_data, t_map_grid *map_grid)
+- Converte map_grid->lines (char **) para cube_data->map (int **).
+- Para cada celula:
+  - se cell == '1' ou ' ': cube_data->map[row][col] = 1 (parede/borda)
+  - senao: cube_data->map[row][col] = 0 (chao andavel)
+- Se cell for 'N', 'S', 'E', 'W':
+  - define cube_data->raycast.pos_x = col + 0.5
+  - define cube_data->raycast.pos_y = row + 0.5
+  - chama set_spawn_orientation(&cube_data->raycast, cell)
+- Motivo: transformar representacao textual em uma forma numerica eficiente para raycasting, e definir posicao inicial do jogador.
+
+3.4. parser(int argc, char **argv, t_cube_data *cube_data)
+- Zera cube_data com ft_memset.
+- Verifica argc == 2, senao: parser_error_usage() e retorna 1.
+- Chama parse_cub_file_data(argv[1], &cfg, &map_grid).
+- Copia de cfg para cube_data:
+  - no_path, so_path, we_path, ea_path
+  - floor_rgb[3], ceiling_rgb[3]
+- Copia de map_grid para cube_data:
+  - map_width, map_height
+- Inicializa cube_data->raycast.old_time = 0.
+- Chama copy_runtime_map; se falhar, libera cfg/map_grid e imprime erro de memoria.
+- No caminho de sucesso, libera cfg e map_grid e retorna 0.
+
+
+4. Pipeline do Parser (subprojeto src/Parser)
+--------------------------------------------
+
+4.1. parse_cub_file_data (src/Parser/src/parsing/reader/parse_cub_file.c)
+- has_cub_extension(path): verifica se termina com ".cub".
+- Abre o arquivo com open(path, O_RDONLY).
+- Chama load_file_lines_data(fd, path, cfg_out, map_out).
+- Fecha o fd e retorna o status de erro (0 ou 1).
+
+4.2. load_file_lines_data (src/Parser/src/parsing/reader/read_lines.c)
+- Inicializa:
+  - has_invalid = 0
+  - line_no = 1
+  - has_map_started = 0
+  - init_parser_config(cfg_out)
+  - init_map_grid(map_out)
+- Loop: line = get_next_line(fd)
+  - Usa line_type_name(line) para classificar a linha:
+    - "EMPTY"   -> linha em branco
+    - "ELEMENT" -> NO, SO, WE, EA, F, C
+    - "MAP"     -> linhas de mapa (0,1,N,S,E,W e espacos)
+    - "INVALID" -> resto
+  - Se ELEMENT:
+    - se has_map_started == 1: parser_error_element_after_map
+    - senao: parse_element_line(cfg_out, line, line_no)
+  - Se MAP:
+    - has_map_started = 1
+    - add_map_line(map_out, line, line_no)
+  - Se INVALID:
+    - has_invalid = 1
+    - report_invalid_line(line, line_no, has_map_started)
+  - Libera a linha e incrementa line_no.
+- Apos o loop:
+  - Se !has_invalid: validate_required_elements(cfg_out, source_path)
+  - Se ainda ok: extract_map_grid(map_out)
+  - Se ainda ok: validate_map_charset_and_spawn(map_out)
+  - Se ainda ok: validate_map_closed(map_out)
+  - Se deu erro em qualquer etapa: free_parser_config e free_map_grid.
+
+4.3. Classificacao de linhas (src/Parser/src/parsing/types/line_types.c)
+- is_empty_line(char *line)
+  - Ignora espacos/tabs; se sobra '\0' ou '\n', retorna 1.
+- is_element_line(char *line)
+  - Ignora espacos/tabs; ve se comeca com "NO ", "SO ", "WE ", "EA ", "F ", "C ".
+- is_map_line(char *line)
+  - Percorre a linha ate '\0' ou '\n'.
+  - Permite ' ', '0', '1', 'N', 'S', 'E', 'W'.
+  - Marca has_map_char = 1 se encontrar um desses tokens de mapa.
+  - Se encontrar qualquer outro char, retorna 0.
+  - Senao retorna has_map_char.
+- line_type_name(char *line)
+  - Se is_empty_line -> "EMPTY"
+  - Senao se is_element_line -> "ELEMENT"
+  - Senao se is_map_line     -> "MAP"
+  - Senao                     -> "INVALID"
+
+4.4. Configuracao dos elementos (texturas/cores)
+
+4.4.1. parser_config.c
+- init_parser_config
+  - Zera todos os ponteiros e coloca floor_rgb/ceiling_rgb = -1.
+- free_parser_config
+  - free em no_path, so_path, we_path, ea_path, f_raw, c_raw.
+
+4.4.2. elements_parse.c
+- skip_spaces: avanca ' ' e '\t'.
+- set_element_value
+  - Garante que o campo nao foi setado antes (se sim, parser_error_duplicate).
+  - Faz ft_strtrim(value, " \t\n") e guarda no ponteiro de destino.
+- parse_element_line
+  - Verifica prefixo depois dos espacos:
+    - "NO " -> cfg->no_path
+    - "SO " -> cfg->so_path
+    - "WE " -> cfg->we_path
+    - "EA " -> cfg->ea_path
+    - "F "  -> cfg->f_raw
+    - "C "  -> cfg->c_raw
+  - Usa set_element_value para armazenar o valor.
+
+4.4.3. elements_validate.c
+- print_missing_if_null
+  - Emite parser_error_missing se o valor for NULL.
+- parse_rgb_component
+  - Pula espacos/tabs, le um inteiro 0-255, e valida o range.
+- parse_rgb_triplet
+  - Chama parse_rgb_component tres vezes com virgulas entre eles.
+  - Permite apenas espaco/tab/newline apos o ultimo componente.
+- validate_rgb_value
+  - Usa parse_rgb_triplet e emite parser_error_invalid_rgb em caso de erro.
+- build_source_relative_path
+  - Constrói um caminho relativo ao diretorio do source_path se a textura nao for absoluta.
+- validate_texture_path
+  - Verifica se o arquivo apontado por path abre.
+  - Se nao, tenta um caminho relativo ao arquivo .cub.
+  - Atualiza *path_ref com o caminho resolvido se precisar.
+- validate_required_elements
+  - Garante que NO/SO/WE/EA/F/C estao presentes.
+  - Chama validate_texture_path para cada textura.
+  - Chama validate_rgb_value para F/C, preenchendo floor_rgb e ceiling_rgb.
+
+4.5. Acumulo e normalizacao do mapa (map_grid_utils.c, map_extract.c)
+
+4.5.1. map_grid_utils.c
+- init_map_grid
+  - lines = NULL, height = 0, width = 0.
+- free_map_grid
+  - free em cada linha, depois free em lines, zera campos.
+- dup_line_without_newline
+  - Copia a linha ate antes de um '\n' final, se existir.
+- add_map_line
+  - Cria uma copia da linha sem '\n'.
+  - Realoca o vetor lines para ter mais uma entrada.
+  - Adiciona a nova linha no final e incrementa height.
+
+4.5.2. map_extract.c
+- get_max_map_width
+  - Retorna o maior strlen entre todas as linhas do mapa.
+- normalize_line
+  - Aloca string de tamanho width.
+  - Preenche com espacos e copia o conteudo original por cima.
+- extract_map_grid
+  - Define map->width = get_max_map_width(map).
+  - Se height == 0 ou width == 0, retorna 0.
+  - Cria um novo vetor normalized de height linhas normalizadas.
+  - Libera as linhas antigas e substitui por normalized.
+
+4.6. Validacao do mapa (map_validate.c)
+
+- is_spawn_char: retorna 1 para 'N', 'S', 'E', 'W'.
+- is_allowed_map_char: retorna 1 para '0', '1', ' ', ou spawn.
+- is_walkable_char: retorna 1 para '0' ou spawn.
+- is_open_cell
+  - Retorna 1 se a celula andavel estiver na borda ou tiver vizinho ' ' ao redor.
+- validate_map_charset_and_spawn
+  - Percorre todo o grid normalizado.
+  - Verifica se todos os chars estao no conjunto permitido.
+  - Conta spawn_count (quantos N/S/E/W).
+  - Se spawn_count != 1, emite parser_error_spawn_count.
+- validate_map_closed
+  - Percorre o mapa e, para cada celula walkable ('0' ou spawn), verifica com is_open_cell.
+  - Se alguma celula andavel tiver fuga para borda ou ' ', emite parser_error_map_open.
+
+
+5. Como o valid_arthur.cub passa por essas funcoes (linha a linha)
+-------------------------------------------------------------------
+
+Arquivo: src/sample_maps/valid_arthur.cub
+
+1) Linhas de texturas (NO, SO, WE, EA)
+-------------------------------------
+Exemplo: "NO ./textures/north.png"
+
+- load_file_lines_data le a linha.
+- line_type_name chama:
+  - is_empty_line -> 0
+  - is_element_line -> 1 (linha comeca com "NO ")
+  - Resultado: "ELEMENT".
+- load_file_lines_data (ramo ELEMENT):
+  - has_map_started == 0, entao chama parse_element_line(&cfg, line, line_no).
+- parse_element_line para NO:
+  - Usa skip_spaces.
+  - Reconhece prefixo "NO ".
+  - Chama set_element_value(&cfg.no_path, value, "NO", line_no).
+- O mesmo se repete para SO, WE, EA.
+- Depois de ler o arquivo todo:
+  - validate_required_elements garante que no_path/so_path/we_path/ea_path nao sao NULL.
+  - validate_texture_path abre os arquivos de textura para garantir que existem.
+- Mais tarde, parser copia cfg.no_path etc. para cube_data->no_path etc.
+- Em start_cube, load_wall_textures chama mlx_load_png(cube_data->no_path) e similares.
+
+2) Linhas F e C (cores do chao/teto)
+------------------------------------
+Exemplo: "F 220,100,0" / "C 225,30,0"
+
+- line_type_name classifica como "ELEMENT" (via is_element_line).
+- load_file_lines_data chama parse_element_line.
+- parse_element_line:
+  - Para F: chama set_element_value(&cfg.f_raw, "220,100,0", "F", line_no).
+  - Para C: chama set_element_value(&cfg.c_raw, "225,30,0", "C", line_no).
+- Depois do loop de leitura:
+  - validate_required_elements verifica f_raw e c_raw.
+  - validate_rgb_value(cfg.f_raw, "F", cfg.floor_rgb) chama parse_rgb_triplet:
+    - parse_rgb_component para 220, depois 100, depois 0.
+  - validate_rgb_value(cfg.c_raw, "C", cfg.ceiling_rgb) faz o mesmo para 225, 30, 0.
+- parser copia esses arrays para cube_data->floor_rgb e cube_data->ceiling_rgb.
+- Em runtime, refresh_pixel monta ceil_color e floor_color e pinta metade superior/inferior da tela.
+
+3) Linhas vazias entre blocos
+------------------------------
+
+- line_type_name:
+  - is_empty_line retorna 1, entao tipo "EMPTY".
+- load_file_lines_data nao chama parser de elemento nem mapa; apenas ignora.
+
+4) Bloco de mapa (linhas 1111..., 0, N, etc.)
+---------------------------------------------
+
+Durante a leitura linha a linha:
+
+- Cada linha e classificada por line_type_name:
+  - is_empty_line -> 0 (tem conteudo)
+  - is_element_line -> 0
+  - is_map_line -> 1 (so contem ' ', '0', '1', 'N', 'S', 'E', 'W' e pelo menos um desses).
+  - Resultado: "MAP".
+- load_file_lines_data (ramo MAP):
+  - Se for a primeira linha de mapa, seta has_map_started = 1.
+  - Chama add_map_line(map_out, line, line_no).
+- add_map_line
+  - dup_line_without_newline remove '\n' final.
+  - Realoca map->lines para ter mais 1 linha.
+  - Copia ponteiros antigos e adiciona a nova linha.
+  - Incrementa map->height.
+
+Depois de ler todas as linhas do mapa:
+
+- extract_map_grid(map_out):
+  - get_max_map_width acha a maior largura entre todas as linhas.
+  - Para cada linha:
+    - normalize_line cria uma copia de tamanho width, preenchendo com espacos a direita.
+  - map->lines passa a ser uma grade retangular (height x width), com espacos de padding.
+
+- validate_map_charset_and_spawn(map_out):
+  - Varre cada celula do mapa.
+  - Garante que todos os caracteres estao em {'0','1',' ','N','S','E','W'}.
+  - Conta o numero de spawns (N/S/E/W).
+  - No valid_arthur existe exatamente um 'N', entao passa.
+
+- validate_map_closed(map_out):
+  - Para cada celula walkable ('0' ou spawn):
+    - is_open_cell verifica se esta na borda ou se algum vizinho (cima, baixo, esquerda, direita) e ' '.
+  - Se qualquer walkable estiver "aberto" para fora, a funcao falha.
+  - No valid_arthur, o mapa esta bem fechado, entao passa.
+
+Integracao com o runtime (parser.c):
+
+- Depois que parse_cub_file_data retorna com sucesso:
+  - parser chama copy_runtime_map(&cube_data, &map_grid).
+  - Para cada celula:
+    - '1' ou ' ' -> cube_data->map[row][col] = 1 (parede/borda)
+    - '0' ou spawn -> cube_data->map[row][col] = 0 (chao andavel)
+    - se for 'N', 'S', 'E', 'W':
+      - define posicao inicial (pos_x/pos_y) no centro da celula.
+      - chama set_spawn_orientation para definir dir/plane.
+
+
+6. Runtime: start_cube, loop e raycasting
+-----------------------------------------
+
+6.1. init_mlx, create_image_cube, create_minimap
+
+- init_mlx (src/image/mlx.c)
+  - Define win_width = 900, win_height = 900.
+  - Chama mlx_init(win_width, win_height, "game", true).
+
+- create_image_cube (src/image/cube.c)
+  - Seta image_cube.width/height com base em mlx->width/height.
+  - Cria a imagem principal com create_image.
+  - Coloca a imagem na janela com mlx_image_to_window.
+
+- create_minimap, player, draw_moving_minimap (src/image/minimap.c)
+  - Cria uma imagem pequena (99x99) para o minimapa.
+  - draw_moving_minimap usa cube_data->map e cube_data->raycast.pos_x/pos_y
+    para desenhar uma area 11x11 em volta do jogador com cores diferentes para
+    paredes, chao, etc.
+  - player cria uma imagem 9x9 branca e a desenha em posicao fixa no canto
+    (representando o jogador no minimapa).
+
+6.2. Carregamento de texturas de parede
+
+- load_wall_textures (src/cube/start.c)
+  - Chama mlx_load_png(cube_data->no_path), so_path, we_path, ea_path.
+  - Se qualquer uma falhar, imprime erro e retorna EXIT_FAILURE.
+
+6.3. Loop principal
+
+- start_cube (src/cube/start.c)
+  - init_mlx
+  - load_wall_textures
+  - create_image_cube
+  - create_minimap
+  - mlx_key_hook para a funcao door (abrir/fechar porta)
+  - mlx_loop_hook para a funcao raycast (chamada a cada frame)
+  - mlx_loop (entra no loop de eventos)
+  - Ao sair, mlx_terminate
+
+- door (src/cube/start.c)
+  - Se o usuario apertar ESPACO:
+    - Calcula a celula na frente do jogador (pos + dir * 1).
+    - Se for 1, troca para 3 (porta aberta); se for 3, volta para 1 (porta fechada).
+
+- raycast (src/cube/start.c)
+  - Se ESC pressionado, fecha a janela.
+  - Chama refresh_pixel (pinta ceu e chao conforme ceiling_rgb/floor_rgb).
+  - Chama calculate_raycast (desenha paredes com raycasting e texturas).
+  - Chama calculate_rotation_and_movement (le teclado e atualiza posicao/rotacao).
+  - Zera pixels do minimapa e chama draw_moving_minimap de novo.
+
+6.4. Raycasting (src/cube/calculate_raycast.c)
+
+- calculate_side_dist
+  - Define step_x e step_y (sinal da direcao do raio em cada eixo).
+  - Calcula side_dist_x/side_dist_y, que sao as distancias ate o primeiro
+    cruzamento de grid em cada direcao.
+
+- calculate_dda
+  - Para uma coluna x da tela:
+    - Calcula camera_x em [-1,1].
+    - Calcula raydir_x, raydir_y a partir de dir_x/dir_y e plane_x/plane_y.
+    - Define map_x, map_y como floor(pos_x), floor(pos_y).
+    - Calcula delta_dist_x = |1 / raydir_x| (ou numero grande se raydir_x == 0).
+    - Calcula delta_dist_y similarmente.
+    - Chama calculate_side_dist para configurar side_dist_x/y e step_x/y.
+
+- calculate_hit
+  - Algoritmo DDA:
+    - Enquanto r->hit == 0:
+      - Compara side_dist_x e side_dist_y.
+      - Avanca para o proximo grid em X ou Y (map_x/map_y) incrementando side_dist correspondente.
+      - Marca r->side = 0 (se avancou em X) ou 1 (se avancou em Y).
+      - Se map[map_y][map_x] > 0, marca r->hit = 1.
+      - Se sair dos limites do mapa, quebra.
+
+- calculate_draw_start_end
+  - Calcula perp_wall_dist baseado em side_dist_x/y - delta_dist_x/y.
+  - Calcula line_height = image_height / perp_wall_dist.
+  - Define draw_start e draw_end centralizados verticalmente e limita dentro da tela.
+
+- calculate_raycast
+  - Para cada x de 0 ate image_cube.width - 1:
+    - calculate_dda
+    - calculate_hit
+    - calculate_draw_start_end
+    - Se map[map_y][map_x] == 1: chama draw_textured_column.
+    - Senao:
+      - change_color (define uma cor solida)
+      - ver_line (desenha a coluna com cor solida).
+
+6.5. Texturas e fundo (src/cube/pixel.c, src/cube/calculate_texture.c)
+
+- ft_pixel
+  - Empacota r, g, b, a em um inteiro, usado por mlx_put_pixel.
+
+- get_texel_color
+  - Lê os 4 bytes (RGBA) na posicao (x,y) da textura e transforma num inteiro com ft_pixel.
+
+- draw_textured_column
+  - Escolhe qual textura usar baseado em:
+    - r->side (0 ou 1) e o sinal de raydir_x/raydir_y.
+  - Calcula wall_x (posicao exata do impacto na parede em coordenada [0,1]).
+  - Calcula tex_x (coordenada horizontal na textura).
+  - Calcula step = tex_h / line_height (quantos pixels de textura sobem para cada pixel na tela).
+  - Itera y de draw_start ate draw_end:
+    - Calcula tex_y a partir de tex_pos.
+    - Lê cor com get_texel_color.
+    - Opcionalmente escurece se side == 1.
+    - Desenha com mlx_put_pixel na imagem principal.
+
+- ver_line
+  - Desenha uma coluna simples entre draw_start e draw_end usando r->color.
+
+- refresh_pixel
+  - Calcula ceil_color e floor_color a partir de ceiling_rgb e floor_rgb.
+  - Para cada pixel da imagem:
+    - Se y estiver na metade superior, desenha ceil_color.
+    - Se na inferior, floor_color.
+
+- change_color (src/cube/calculate_texture.c)
+  - Seleciona cor baseada em cube_data->map[map_y][map_x] (1,2,3, etc.).
+  - Escurece a cor se r->side == 1.
+
+6.6. Movimento e rotacao (src/cube/calculate_movement.c, calculate_point_view.c)
+
+- key_up_move_position / key_down_move_position
+  - Movem o jogador para frente/tras ao longo de dir_x/dir_y, respeitando colisao (so avanca se a celula alvo no mapa for 0).
+
+- key_rigth_move_position / key_left_move_position
+  - Movimentos laterais (strafes) baseados em vetores perpendiculares a dir.
+
+- calculate_rotation_and_movement
+  - Usa mlx_get_time para medir frame_time.
+  - Define move_speed proporcional a frame_time.
+  - Se W/S/A/D pressionados, chama as funcoes de movimento.
+  - Se setas esquerda/direita pressionadas, chama key_rigth_move_point_view / key_left_move_point_view.
+
+- key_rigth_move_point_view / key_left_move_point_view
+  - Rotacionam dir_x/dir_y e plane_x/plane_y com matriz de rotacao (cos/sin) usando move_speed como angulo.
+
+
+7. Limpeza de recursos (src/utils/free_all.c)
+--------------------------------------------
+
+- free_all(t_cube_data *cube_data)
+  - Se tex_no/tex_so/tex_we/tex_ea existem, chama mlx_delete_texture e zera ponteiros.
+  - Da free nos paths de textura (no_path, so_path, etc.) e zera.
+  - Se map nao existe, retorna.
+  - Senao, da free em cada linha de map e depois em map, e zera o ponteiro.
+
+
+8. Funcoes que valid_arthur.cub NAO executa em um caminho de sucesso
+--------------------------------------------------------------------
+
+Em um parsing e runtime bem-sucedidos (como com valid_arthur.cub), o fluxo NAO passa por:
+
+- Funcoes de erro do parser (src/Parser/src/parsing/utils/parser_errors.c):
+  - parser_error_invalid_line
+  - parser_error_element_after_map
+  - parser_error_duplicate
+  - parser_error_missing
+  - parser_error_malloc (no caminho sem erro)
+  - parser_error_map_invalid_char
+  - parser_error_spawn_count
+  - parser_error_map_open
+  - parser_error_invalid_rgb
+  - parser_error_invalid_texture
+  - parser_error_usage
+  - parser_error_file_open
+  - parser_error_invalid_extension
+
+- Funcoes "demo" nao usadas pelo runtime principal:
+  - parse_cub_file (sem sufixo _data)
+  - load_file_lines (sem sufixo _data)
+
+- Macros de debug (src/Parser/includes/debug.h):
+  - DBG_LINE, DBG_CLASSIFIED_LINE, DBG_MAP_GRID_INFO, DBG_MAP_GRID_LINE,
+    DBG_MAP_VALIDATE_CHAR, DBG_MAP_VALIDATE_SPAWN, DBG_MAP_VALIDATE_OPEN,
+    caso DEBUG_PARSER nao esteja definido.
+
+- Ramas de erro em load_wall_textures, create_image_cube, create_minimap,
+  que so seriam executados se houvesse falha de alocacao ou de carregamento
+  de textura.
+
+
+9. Confirmacao: o valid_arthur.cub passa por TODAS as funcoes?
+--------------------------------------------------------------
+
+- Nao: o mapa valid_arthur.cub NAO passa por todas as funcoes do projeto.
+
+O que acontece de fato:
+- Ele passa por TODAS as funcoes envolvidas no caminho feliz de parsing,
+  normalizacao e validacao (descritas acima) e por todas as funcoes de
+  runtime usadas durante o jogo (raycasting, movimento, minimapa, etc.).
+- Ele NAO entra nas funcoes de erro (parser_error_...), nem em wrappers
+  de demo (parse_cub_file/load_file_lines sem sufixo _data) no caminho
+  normal de execucao.
+- Bibliotecas auxiliares (libft, get_next_line, MLX42 interna, etc.)
+  obviamente sao usadas, mas seus detalhes nao foram destrinchados aqui.
+
+Portanto:
+- O valid_arthur.cub e um exemplo de entrada que exerce o pipeline
+  completo de parsing "correto" e o pipeline principal de runtime,
+  mas nao aciona os fluxos de erro.
