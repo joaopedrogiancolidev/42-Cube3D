@@ -47,8 +47,8 @@ static int	set_element_value(char **dst, char *value, const char *key,
 */
 int	parse_element_line(t_parser_config *cfg, char *line, int line_no)
 {
-	char	*start;
-	char	*value;
+	char *start;
+	char *value;
 
 	start = skip_spaces(line);
 	if (ft_strncmp(start, "NO ", 3) == 0)
