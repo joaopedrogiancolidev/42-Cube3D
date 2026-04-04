@@ -75,7 +75,6 @@ int	validate_map_charset_and_spawn(t_map_grid *map)
 		{
 			if (!is_allowed_map_char(map->lines[row][col]))
 			{
-				DBG_MAP_VALIDATE_CHAR(row + 1, col + 1, map->lines[row][col]);
 				parser_error_map_invalid_char(row + 1, col + 1,
 					map->lines[row][col]);
 				return (1);
@@ -86,7 +85,6 @@ int	validate_map_charset_and_spawn(t_map_grid *map)
 		}
 		row++;
 	}
-	DBG_MAP_VALIDATE_SPAWN(spawn_count);
 	if (spawn_count != 1)
 	{
 		parser_error_spawn_count(spawn_count);
@@ -112,7 +110,6 @@ int	validate_map_closed(t_map_grid *map)
 		{
 			if (is_walkable_char(map->lines[row][col]) && is_open_cell(map, row, col))
 			{
-				DBG_MAP_VALIDATE_OPEN(row + 1, col + 1, map->lines[row][col]);
 				parser_error_map_open(row + 1, col + 1, map->lines[row][col]);
 				return (1);
 			}

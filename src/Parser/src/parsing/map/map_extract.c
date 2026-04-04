@@ -82,12 +82,9 @@ static void	free_partial_normalized(char **lines, int count)
 static void	debug_print_map_grid(t_map_grid *map)
 {
 	int	i;
-
-	DBG_MAP_GRID_INFO(map->width, map->height);
 	i = 0;
 	while (i < map->height)
 	{
-		DBG_MAP_GRID_LINE(i, map->lines[i]);
 		i++;
 	}
 }

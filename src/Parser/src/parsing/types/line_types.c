@@ -22,7 +22,6 @@ int	is_empty_line(char *line)
 	while (line[i] == ' ' || line[i] == '\t')
 		i++;
 	result = (line[i] == '\0' || line[i] == '\n');
-	DBG_LINE("is_empty_line", line, result);
 	return (result);
 }
 
@@ -53,7 +52,6 @@ int	is_element_line(char *line)
 		result = 1;
 	else
 		result = 0;
-	DBG_LINE("is_element_line", raw_line, result);
 	return (result);
 }
 
@@ -85,15 +83,13 @@ int	is_map_line(char *line)
 			continue;
         }
         result = 0;
-        DBG_LINE("is_map_line", line, result);
         return (result);
     }
     result = has_map_char;
-    DBG_LINE("is_map_line", line, result);
     return (result);
 }
 
-const char	*line_type_name(char *line)
+char	*line_type_name(char *line)
 {
     /*
     ** Central classifier used by load_file_lines() to dispatch each line

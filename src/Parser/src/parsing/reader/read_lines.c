@@ -106,7 +106,6 @@ int	load_file_lines_data(int fd, const char *source_path,
 			has_invalid = 1;
 			report_invalid_line(line, line_no, has_map_started);
 		}
-		DBG_CLASSIFIED_LINE(line_no, line_type, line);
 		free(line);
 		line = get_next_line(fd);
 		line_no++;

@@ -6,7 +6,7 @@
 /*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/26 17:01:45 by jgiancol          #+#    #+#             */
-/*   Updated: 2025/09/03 01:15:44 by jgiancol         ###   ########.fr       */
+/*   Updated: 2026/04/04 14:25:30 by jgiancol         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 # include	<stdlib.h>
 # include	<unistd.h>
 # include	"get_next_line.h"
+# include	"ft_printf.h"
 
 typedef struct s_list
 {

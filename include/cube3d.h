@@ -6,7 +6,7 @@
 /*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/18 17:12:10 by arthur            #+#    #+#             */
-/*   Updated: 2026/04/02 10:36:41 by jgiancol         ###   ########.fr       */
+/*   Updated: 2026/04/04 14:27:39 by jgiancol         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 # include "raycasting.h"
 # include <math.h>
 # include "parser.h"
+# include "ft_printf.h"
 
 typedef struct s_image_cube
 {
@@ -103,5 +104,6 @@ typedef struct s_cube_data
 int			parser(int argc, char **argv, t_cube_data *cube_data);
 void		free_all(t_cube_data *cube_data);
 void		ver_line(mlx_image_t	*img, int x, t_raycast *raycast);
+void		draw_moving_minimap(t_cube_data *cube_data);
 
 #endif
