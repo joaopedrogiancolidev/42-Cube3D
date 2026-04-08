@@ -6,18 +6,14 @@
 /*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/18 18:48:42 by arthur            #+#    #+#             */
-/*   Updated: 2026/04/01 10:02:39 by jgiancol         ###   ########.fr       */
+/*   Updated: 2026/04/08 15:18:59 by jgiancol         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cube3d.h"
 
-void	free_all(t_cube_data *cube_data)
+static void	free_textures(t_cube_data *cube_data)
 {
-	int	i;
-
-	if (!cube_data)
-		return ;
 	if (cube_data->tex_no)
 	{
 		mlx_delete_texture(cube_data->tex_no);
@@ -38,6 +34,10 @@ void	free_all(t_cube_data *cube_data)
 		mlx_delete_texture(cube_data->tex_ea);
 		cube_data->tex_ea = NULL;
 	}
+}
+
+static void	free_paths(t_cube_data *cube_data)
+{
 	free(cube_data->no_path);
 	free(cube_data->so_path);
 	free(cube_data->we_path);
@@ -46,14 +46,29 @@ void	free_all(t_cube_data *cube_data)
 	cube_data->so_path = NULL;
 	cube_data->we_path = NULL;
 	cube_data->ea_path = NULL;
+}
+
+static void	free_map_data(t_cube_data *cube_data)
+{
+	int			row;
+
 	if (!cube_data->map)
 		return ;
-	i = 0;
-	while (i < cube_data->map_height)
+	row = 0;
+	while (row < cube_data->map_height)
 	{
-		free(cube_data->map[i]);
-		i++;
+		free(cube_data->map[row]);
+		row++;
 	}
 	free(cube_data->map);
 	cube_data->map = NULL;
+}
+
+void	free_all(t_cube_data *cube_data)
+{
+	if (!cube_data)
+		return ;
+	free_textures(cube_data);
+	free_paths(cube_data);
+	free_map_data(cube_data);
 }
