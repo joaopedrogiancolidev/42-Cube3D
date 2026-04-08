@@ -6,7 +6,7 @@
 /*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/19 11:02:57 by arthur            #+#    #+#             */
-/*   Updated: 2026/04/08 14:05:08 by jgiancol         ###   ########.fr       */
+/*   Updated: 2026/04/08 19:37:52 by jgiancol         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,7 +91,6 @@ int	start_cube(t_cube_data *cube_data)
 		return (EXIT_FAILURE);
 	if (!cube_data->mlx || create_minimap(cube_data) == EXIT_FAILURE)
 		return (EXIT_FAILURE);
-	mlx_key_hook(cube_data->mlx, &door, cube_data);
 	mlx_loop_hook(cube_data->mlx, raycast, cube_data);
 	mlx_loop(cube_data->mlx);
 	mlx_terminate(cube_data->mlx);

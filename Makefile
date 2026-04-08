@@ -2,8 +2,8 @@ NAME    := game
 # CFLAGS  := -Wextra -Wall -Werror -Ofast
 CFLAGS  := 
 
-LIBMLX  := ./MLX42
-LIBFT_DIR := ./libft
+LIBMLX  := ./libs/MLX42
+LIBFT_DIR := ./libs/libft
 PRINTF_DIR := $(LIBFT_DIR)/printf
 LIBFT := $(LIBFT_DIR)/libft.a
 LIBPRINTF := $(PRINTF_DIR)/libftprintf.a
