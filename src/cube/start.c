@@ -6,16 +6,12 @@
 /*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/19 11:02:57 by arthur            #+#    #+#             */
-/*   Updated: 2026/04/04 14:21:46 by jgiancol         ###   ########.fr       */
+/*   Updated: 2026/04/08 14:05:08 by jgiancol         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cube3d.h"
 
-// mltx_txture_t -> texture
-// carrega em mlx_load_png
-// image = mlx_texture_to_image(mlx, textura)
-// mlx_load_texture png propri
 static int	load_wall_textures(t_cube_data *cube_data)
 {
 	cube_data->tex_no = mlx_load_png(cube_data->no_path);
@@ -45,7 +41,6 @@ static int	load_wall_textures(t_cube_data *cube_data)
 	return (EXIT_SUCCESS);
 }
 
-//transformar 1 para 3, indentificar se eh igual a 2(porta), transforma para 3.(porta esta a aberta? passa para 2).
 void	door(mlx_key_data_t keydata, void *param)
 {
 	t_cube_data	*c;
@@ -84,7 +79,7 @@ void	raycast(void *param)
 	calculate_rotation_and_movement(c);
 	ft_memset(c->minimap->pixels, 0,
 		c->minimap->width * c->minimap->height * sizeof(int));
-	draw_moving_minimap(c); // Ue
+	draw_moving_minimap(c);
 }
 
 int	start_cube(t_cube_data *cube_data)
