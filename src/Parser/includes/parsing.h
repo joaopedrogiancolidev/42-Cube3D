@@ -6,7 +6,7 @@
 /*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/03 15:37:35 by jgiancol          #+#    #+#             */
-/*   Updated: 2026/04/03 15:38:43 by jgiancol         ###   ########.fr       */
+/*   Updated: 2026/04/07 15:22:18 by jgiancol         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,6 @@
 int		is_empty_line(char *line);
 int		is_element_line(char *line);
 int		is_map_line(char *line);
-int		load_file_lines(int fd, const char *source_path);
 int		load_file_lines_data(int fd, const char *source_path,
 			t_parser_config *cfg_out, t_map_grid *map_out);
 int		parse_cub_file(const char *path);

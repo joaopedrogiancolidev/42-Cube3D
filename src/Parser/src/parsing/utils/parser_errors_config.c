@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   parser_errors.c                                    :+:      :+:    :+:   */
+/*   parser_errors_config.c                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/04/04 14:22:31 by jgiancol          #+#    #+#             */
-/*   Updated: 2026/04/08 00:32:22 by jgiancol         ###   ########.fr       */
+/*   Created: 2026/04/08 00:20:10 by jgiancol          #+#    #+#             */
+/*   Updated: 2026/04/08 00:32:01 by jgiancol         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,26 +17,20 @@ static void	print_error_prefix(void)
 	ft_printf("Error\n");
 }
 
-void	parser_error_invalid_line(int line_no)
+void	parser_error_invalid_rgb(const char *key)
 {
 	print_error_prefix();
-	ft_printf("invalid line at line %d\n", line_no);
+	ft_printf("invalid RGB value for '%s' (expected R,G,B in [0,255])\n", key);
 }
 
-void	parser_error_element_after_map(int line_no)
+void	parser_error_invalid_texture(const char *key, const char *path)
 {
 	print_error_prefix();
-	ft_printf("element after map started at line %d\n", line_no);
+	ft_printf("invalid texture path for '%s': %s\n", key, path);
 }
 
-void	parser_error_duplicate(const char *key, int line_no)
+void	parser_error_usage(void)
 {
 	print_error_prefix();
-	ft_printf("duplicate element '%s' at line %d\n", key, line_no);
-}
-
-void	parser_error_missing(const char *key)
-{
-	print_error_prefix();
-	ft_printf("missing required element '%s'\n", key);
+	ft_printf("usage: ./maps <map.cub>\n");
 }

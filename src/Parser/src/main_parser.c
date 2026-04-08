@@ -1,12 +1,17 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main_parser.c                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/04/08 00:14:07 by jgiancol          #+#    #+#             */
+/*   Updated: 2026/04/08 00:14:13 by jgiancol         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "parser.h"
 
-/*
-** Entry point for parser_demo.
-** Why it exists:
-** - Validate CLI usage and open the .cub file.
-** - Delegate all parsing work to load_file_lines().
-** - Convert parser result to process exit code (0 success, 1 error).
-*/
 int	main(int argc, char **argv)
 {
 	int		has_invalid;

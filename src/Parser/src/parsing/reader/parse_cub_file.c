@@ -1,19 +1,17 @@
-/*
-** parse_cub_file.c - Day 6: consolidated parser entry pipeline
-**
-** parse_cub_file(path):
-**   1) Open .cub file
-**   2) Run load_file_lines(fd)
-**   3) Close file and return parser status
-**
-** Why it exists:
-** - Keep the parser flow centralized outside CLI/demo concerns.
-** - Reuse one stable entry point for future integration in Cube3D runtime.
-*/
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parse_cub_file.c                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/04/07 15:06:49 by jgiancol          #+#    #+#             */
+/*   Updated: 2026/04/08 00:07:50 by jgiancol         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "parser.h"
 
-/* Enforces mandatory .cub input extension before parsing starts. */
 static int	has_cub_extension(const char *path)
 {
 	int	len;
@@ -49,8 +47,8 @@ int	parse_cub_file_data(const char *path, t_parser_config *cfg_out,
 int	parse_cub_file(const char *path)
 {
 	t_parser_config	cfg;
-	t_map_grid	map;
-	int			has_invalid;
+	t_map_grid		map;
+	int				has_invalid;
 
 	has_invalid = parse_cub_file_data(path, &cfg, &map);
 	if (!has_invalid)

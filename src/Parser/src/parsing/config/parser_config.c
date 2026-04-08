@@ -1,9 +1,17 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parser_config.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/04/07 15:35:54 by jgiancol          #+#    #+#             */
+/*   Updated: 2026/04/08 00:14:26 by jgiancol         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "parser.h"
 
-/*
-** Initializes the element configuration structure to a safe empty state.
-** Called once at the start of load_file_lines().
-*/
 void	init_parser_config(t_parser_config *cfg)
 {
 	cfg->no_path = NULL;
@@ -20,10 +28,6 @@ void	init_parser_config(t_parser_config *cfg)
 	cfg->ceiling_rgb[2] = -1;
 }
 
-/*
-** Releases every dynamically stored element value.
-** Called on all parser exits (success and error) to avoid leaks.
-*/
 void	free_parser_config(t_parser_config *cfg)
 {
 	free(cfg->no_path);

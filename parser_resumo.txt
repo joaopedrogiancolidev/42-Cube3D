@@ -1,0 +1,319 @@
+Resumo detalhado do parser e progresso (atualizado em 2026-04-07)
+===============================================================
+
+1. Objetivo geral
+-----------------
+- Entender o fluxo "feliz" do parser com um arquivo .cub válido (ex.: src/sample_maps/valid_arthur.cub).
+- Ir ajustando o código à Norminette, em pequenos passos, sem refatorar o projeto inteiro de uma vez.
+
+2. Fluxo alto nível (caminho feliz)
+-----------------------------------
+- main.c
+  - Chama parser(argc, argv, &cube_data).
+  - Se parser retornar 0, chama start_cube(&cube_data) e depois free_all(&cube_data).
+
+- parser.c
+  - Zera toda a struct t_cube_data com ft_memset(cube_data, 0, sizeof(*cube_data)).
+  - Verifica argc (precisa de 2 argumentos: programa + caminho do .cub).
+  - Chama parse_cub_file_data(argv[1], &cfg, &map_grid).
+  - Se sucesso, chama transfer_config_to_cube(&cube_data, &cfg) e copy_runtime_map(&cube_data, &map_grid).
+
+- src/Parser/src/parsing/reader/parse_cub_file.c
+  - has_cub_extension(path): garante que o arquivo termina com ".cub".
+  - parse_cub_file_data(path, &cfg, &map_grid):
+    - Verifica extensão .cub.
+    - Abre o arquivo com open(path, O_RDONLY).
+    - Chama load_file_lines_data(fd, path, &cfg, &map_grid).
+    - Fecha o fd e retorna o status (0 no fluxo feliz).
+
+3. Leitura linha a linha do .cub (load_file_lines_data)
+------------------------------------------------------
+Arquivo: src/Parser/src/parsing/reader/read_lines.c
+
+- Struct de estado usada durante a leitura:
+  - t_line_state
+    - has_invalid: marca se alguma linha inválida foi encontrada.
+    - has_map_started: marca se já começamos a ler o mapa.
+    - line_no: número da linha atual (começa em 1).
+
+- Função principal: load_file_lines_data(fd, source_path, &cfg, &map_grid)
+  - Inicializa:
+    - t_line_state state = {0, 0, 1};
+    - init_parser_config(&cfg);
+    - init_map_grid(&map_grid).
+  - Loop:
+    - Lê cada linha com get_next_line(fd).
+    - Para cada linha chama process_line_content(line, &cfg, &map_grid, &state).
+    - Libera a linha com free(line) e incrementa state.line_no.
+  - Ao final, chama finalize_parsed_data(&state, &cfg, &map_grid, source_path) e retorna o resultado.
+
+- process_line_content(line, cfg, map, state)
+  - Usa line_type_name(line) para classificar a linha em:
+    - "ELEMENT": linhas como "NO ...", "SO ...", "F ...", "C ...".
+    - "MAP": linhas que fazem parte do mapa (0,1,N,S,E,W, espaços).
+    - "INVALID": qualquer outra coisa.
+  - Regras:
+    - ELEMENT antes do mapa:
+      - Chama parse_element_line(cfg, line, state->line_no).
+    - ELEMENT depois de já ter começado o mapa (has_map_started == 1):
+      - Marca erro: parser_error_element_after_map(...), state->has_invalid = 1.
+    - MAP:
+      - Marca state->has_map_started = 1.
+      - Chama add_map_line(map, line) para guardar essa linha de mapa.
+    - INVALID:
+      - Chama report_invalid_line(...) que decide se é um erro de elemento ou de caractere inválido no mapa.
+      - Marca state->has_invalid = 1.
+
+- finalize_parsed_data(state, cfg, map, source_path)
+  - Fluxo feliz (nenhum erro de formato grave):
+    - Chama validate_required_elements(cfg, source_path) para verificar elementos obrigatórios + texturas + cores.
+    - Chama extract_map_grid(map) para normalizar o mapa em um retângulo (mesmo width em todas as linhas).
+    - Chama validate_map_charset_and_spawn(map) para garantir charset e posição de spawn válidos.
+    - Chama validate_map_closed(map) para garantir que o mapa é fechado por paredes.
+  - Se alguma dessas funções falhar, libera cfg e map e retorna 1.
+  - Caso contrário, retorna 0.
+
+4. Acúmulo de linhas do mapa (t_map_grid e add_map_line)
+--------------------------------------------------------
+Arquivo: src/Parser/src/parsing/map/map_grid_utils.c
+
+- Estrutura t_map_grid (resumo):
+  - char **lines;  -> vetor dinâmico de strings (cada string é uma linha do mapa).
+  - int   height;  -> quantidade de linhas atuais do mapa.
+  - int   width;   -> largura máxima após normalização (definida em extract_map_grid).
+
+- init_map_grid(map)
+  - Inicializa: map->lines = NULL; map->height = 0; map->width = 0.
+
+- free_map_grid(map)
+  - Libera todas as strings em map->lines[i], depois o próprio vetor map->lines.
+  - Zera os campos da struct.
+
+- dup_line_without_newline(line)
+  - Duplicação de uma linha de texto sem o '\n' final.
+  - Útil para não guardar quebras de linha dentro de lines[i].
+
+- add_map_line(map, line)
+  - Objetivo: adicionar uma nova linha de mapa ao vetor map->lines.
+  - Passos (fluxo feliz):
+    1. Chama dup_line_without_newline(line) para criar clean_line.
+    2. Aloca um novo vetor new_lines com tamanho map->height + 1.
+    3. Copia os ponteiros das linhas antigas de map->lines para new_lines.
+    4. Coloca clean_line na última posição: new_lines[map->height] = clean_line.
+    5. Dá free em map->lines antigo (apenas o vetor, as strings continuam válidas).
+    6. Atualiza map->lines = new_lines e incrementa map->height.
+
+- Importante: esse processo vai realocando o vetor à medida que lemos novas linhas de mapa, acumulando todo o mapa em memória.
+
+5. Normalização do mapa (extract_map_grid)
+------------------------------------------
+Arquivo: src/Parser/src/parsing/map/map_extract.c
+
+- Objetivo: transformar o conjunto de linhas brutas em um mapa retangular,
+  com a mesma largura (width) em todas as linhas.
+
+- get_max_map_width(map)
+  - Percorre todas as strings em map->lines.
+  - Calcula o maior strlen entre elas.
+  - Esse valor vira map->width.
+
+- normalize_line(orig, width)
+  - Aloca uma nova string de tamanho width.
+  - Copia a linha original para o início.
+  - Preenche o restante com espaços ' '.
+  - Garante que todas as linhas tenham exatamente width caracteres.
+
+- build_normalized_grid(map, &normalized)
+  - Usa get_max_map_width para definir map->width.
+  - Aloca um vetor normalized com map->height strings.
+  - Para cada i, chama normalize_line(map->lines[i], map->width).
+  - Em caso de falha de malloc, libera qualquer linha já criada e retorna erro.
+
+- extract_map_grid(map)
+  - Chama build_normalized_grid para criar o novo vetor normalized.
+  - Se sucesso:
+    - Libera as strings antigas em map->lines[i].
+    - Libera o próprio vetor map->lines.
+    - Atribui map->lines = normalized.
+    - Agora map->height e map->width definem uma grade totalmente retangular.
+
+6. Elementos de configuração (parse_element_line)
+-------------------------------------------------
+Arquivo: src/Parser/src/parsing/elements/elements_parse.c
+
+- parse_element_line(cfg, line, line_no)
+  - Recebe uma linha do tipo ELEMENT (antes do mapa) e atualiza t_parser_config.
+  - Após pular espaços iniciais, verifica o identificador:
+    - "NO " -> textura norte: preenche cfg->no_path.
+    - "SO " -> textura sul:   preenche cfg->so_path.
+    - "WE " -> textura oeste: preenche cfg->we_path.
+    - "EA " -> textura leste: preenche cfg->ea_path.
+    - "F "  -> cor do chão:   guarda string em cfg->f_raw.
+    - "C "  -> cor do teto:   guarda string em cfg->c_raw.
+  - Usa set_element_value para:
+    - Evitar duplicatas (erro se o mesmo elemento aparecer duas vezes).
+    - Fazer ft_strtrim do valor para remover espaços e '\n'.
+
+- Exemplo (valid_arthur.cub):
+  - Linha: "F 90,170,90" -> cfg->f_raw = "90,170,90".
+  - Linha: "C 255,190,140" -> cfg->c_raw = "255,190,140".
+
+7. Validação de elementos, texturas e cores (validate_required_elements)
+------------------------------------------------------------------------
+Arquivo: src/Parser/src/parsing/elements/elements_validate.c
+
+7.1. Presença obrigatória
+-------------------------
+- Função: print_missing_if_null(value, key)
+  - Se value == NULL, chama parser_error_missing(key) e retorna 1.
+  - Caso contrário, retorna 0.
+
+- Função principal: validate_required_elements(cfg, source_path)
+  - Primeiro passo: verificar se todos os elementos obrigatórios existem:
+    - NO, SO, WE, EA, F, C.
+  - Implementação:
+    - has_error |= print_missing_if_null(cfg->no_path, "NO");
+    - has_error |= print_missing_if_null(cfg->so_path, "SO");
+    - has_error |= print_missing_if_null(cfg->we_path, "WE");
+    - has_error |= print_missing_if_null(cfg->ea_path, "EA");
+    - has_error |= print_missing_if_null(cfg->f_raw, "F");
+    - has_error |= print_missing_if_null(cfg->c_raw, "C");
+  - Se qualquer um estiver faltando, has_error fica != 0 e o fluxo de validação
+    de texturas/cores não segue adiante.
+
+7.2. Validação de caminhos de textura
+-------------------------------------
+- Função auxiliar: build_source_relative_path(source_path, texture_path)
+  - Objetivo: tentar construir um caminho relativo à localização do arquivo .cub.
+  - Exemplo:
+    - source_path = "src/sample_maps/valid_arthur.cub".
+    - texture_path = "./textures/north.png".
+    - A função encontra a última '/' em source_path ("src/sample_maps").
+    - Constrói algo como "src/sample_maps/./textures/north.png".
+
+- Função: validate_texture_path(&cfg->no_path, "NO", source_path) (e equivalentes para SO, WE, EA)
+  - Fluxo feliz:
+    1. Verifica se path não é NULL nem string vazia. Se for, parser_error_invalid_texture(key, "<empty>").
+    2. Tenta abrir o path original com open(path, O_RDONLY).
+       - Se conseguir, fecha o fd e retorna 0 (caminho ok).
+    3. Se não conseguir, chama build_source_relative_path(source_path, path).
+       - Se build falhar (malloc ou problema de caminho), faz parser_error_invalid_texture(key, path) e retorna 1.
+    4. Tenta abrir o caminho resolvido (resolved).
+       - Se ainda falhar, libera resolved e chama parser_error_invalid_texture(key, path), retornando 1.
+       - Se der certo:
+         - Libera a string antiga *path_ref.
+         - Substitui *path_ref por resolved (agora guardamos o caminho corrigido).
+         - Fecha o fd e retorna 0.
+
+7.3. Parsing das cores F e C (RGB)
+----------------------------------
+- Objetivo: converter as strings cfg->f_raw e cfg->c_raw em três inteiros cada,
+  armazenados em cfg->floor_rgb[3] e cfg->ceiling_rgb[3], com cada componente em [0,255].
+
+- Função: parse_rgb_component(const char **p, int *out)
+  - Recebe um ponteiro para ponteiro const char *p (posição atual na string) e um int *out.
+  - Passos (fluxo feliz):
+    1. Pula espaços e tabs iniciais: while (**p == ' ' || **p == '\t') (*p)++.
+    2. Verifica se o próximo caractere é um dígito ('0'..'9'). Se não for, retorna 1 (erro).
+    3. Inicializa value = 0.
+    4. Enquanto houver dígitos, acumula: value = value * 10 + (**p - '0'); (*p)++.
+    5. Pula espaços/tabs novamente.
+    6. Verifica se value está no intervalo [0,255]. Se não estiver, retorna 1.
+    7. Atribui *out = value e retorna 0 (sucesso).
+
+- Função: parse_rgb_triplet(char *raw, int rgb[3])
+  - Usa parse_rgb_component três vezes, esperando vírgulas entre os valores.
+  - Passos:
+    1. const char *p = raw;
+    2. parse_rgb_component(&p, &rgb[0]);
+       - Se falhar, retorna 1.
+    3. Verifica se *p == ','; se não, retorna 1; senão, p++.
+    4. parse_rgb_component(&p, &rgb[1]);
+    5. Verifica novamente ','; se não, retorna 1; senão, p++.
+    6. parse_rgb_component(&p, &rgb[2]);
+    7. Depois, pula espaços, tabs e '\n'.
+    8. Se *p não for '\0' ao final, retorna 1 (caracteres extras inválidos).
+    9. Caso tudo dê certo, retorna 0.
+
+- Função: validate_rgb_value(raw, key, rgb)
+  - Encapsula a chamada de parse_rgb_triplet.
+  - Se parse_rgb_triplet(raw, rgb) != 0:
+    - Chama parser_error_invalid_rgb(key) e retorna 1.
+  - Caso contrário, retorna 0.
+
+- Em validate_required_elements(cfg, source_path)
+  - Se nenhuma textura falhou e não houve erro anterior:
+    - has_error |= validate_rgb_value(cfg->f_raw, "F", cfg->floor_rgb);
+    - has_error |= validate_rgb_value(cfg->c_raw, "C", cfg->ceiling_rgb);
+  - No fluxo feliz, isso preenche:
+    - cfg->floor_rgb[0..2] com os valores da linha F.
+    - cfg->ceiling_rgb[0..2] com os valores da linha C.
+
+- Exemplo concreto (valid_arthur.cub):
+  - F 90,170,90  -> floor_rgb = {90, 170, 90}.
+  - C 255,190,140 -> ceiling_rgb = {255, 190, 140}.
+
+8. Situação da Norminette (arquivos do parser)
+---------------------------------------------
+- Já em conformidade (OK):
+  - src/Parser/src/parsing/reader/read_lines.c
+    - Foi refatorado com t_line_state, process_line_content e finalize_parsed_data.
+  - src/Parser/src/parsing/map/map_grid_utils.c
+    - add_map_line foi quebrada em funções auxiliares para não estourar o limite de linhas.
+  - src/Parser/src/parsing/map/map_extract.c
+    - Lógica pesada foi extraída para build_normalized_grid; debug_print_map_grid removida.
+
+- Parcialmente pendente:
+  - src/Parser/src/parsing/elements/elements_validate.c
+    - Funcionalmente correto, mas ainda com avisos de Norminette:
+      - TOO_MANY_FUNCS e/ou TOO_MANY_LINES.
+    - Próximo passo natural: dividir as funções de RGB e/ou textura em arquivos auxiliares
+      para respeitar os limites da norma, mantendo a mesma lógica.
+
+9. Próximos passos sugeridos
+----------------------------
+1) Finalizar a Norminette em elements_validate.c
+   - Separar helpers de cores (parse_rgb_component, parse_rgb_triplet, validate_rgb_value)
+     em um novo arquivo, por exemplo elements_rgb.c.
+   - Se necessário, quebrar validate_texture_path em funções menores para ficar <= 25 linhas.
+
+2) Seguir o fluxo feliz até o runtime
+   - Estudar transfer_config_to_cube e copy_runtime_map para ver como:
+     - As texturas e cores validadas são copiadas para t_cube_data.
+     - O mapa normalizado vira a estrutura usada pelo raycasting e como a posição
+       inicial do jogador é definida.
+
+Com este resumo, você deve conseguir retomar o trabalho entendendo:
+- Como o parser lê, interpreta e valida o arquivo .cub.
+- Como o mapa é armazenado e normalizado.
+- Como os elementos (texturas e cores) são carregados e verificados.
+- Quais arquivos já passaram na Norminette e o que falta ajustar.
+
+
+
+
+
+
+
+
+
+
+-----------
+
+Dentro de finalize_parsed_data (caminho feliz, sem erros de linha):
+
+validate_required_elements(&cfg, source_path)
+
+Aqui dentro é que rolam:
+checagem de presença (NO/SO/WE/EA/F/C)
+validate_texture_path
+validate_rgb_value (que usa parse_rgb_triplet / parse_rgb_component)
+Se isso passar, vem a parte do mapa:
+
+extract_map_grid(&map_grid)
+validate_map_charset_and_spawn(&map_grid)
+validate_map_closed(&map_grid)
+Então sim: todas essas validações de elementos + mapa são disparadas a partir de finalize_parsed_data.
+Depois que ele retorna 0, o parser chama transfer_config_to_cube e copy_runtime_map para jogar tudo em t_cube_data.
+
+Se quiser, o próximo passo pode ser: abrirmos finalize_parsed_data só pra você enxergar essa sequência inteira num lugar só.

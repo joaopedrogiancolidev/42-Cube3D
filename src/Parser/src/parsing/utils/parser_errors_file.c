@@ -1,24 +1,30 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   elements.h                                         :+:      :+:    :+:   */
+/*   parser_errors_file.c                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: jgiancol <jgiancol@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/04/03 15:31:48 by jgiancol          #+#    #+#             */
-/*   Updated: 2026/04/07 21:49:31 by jgiancol         ###   ########.fr       */
+/*   Created: 2026/04/08 00:20:20 by jgiancol          #+#    #+#             */
+/*   Updated: 2026/04/08 00:32:01 by jgiancol         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef ELEMENTS_H
-# define ELEMENTS_H
+#include "parser.h"
 
-# include "parser_config.h"
+static void	print_error_prefix(void)
+{
+	ft_printf("Error\n");
+}
 
-int	parse_element_line(t_parser_config *cfg, char *line, int line_no);
-int	validate_required_elements(t_parser_config *cfg, const char *source_path);
-int	validate_texture_path(char **path_ref, const char *key,
-		const char *source_path);
-int	validate_rgb_value(char *raw, const char *key, int rgb[3]);
+void	parser_error_file_open(const char *path)
+{
+	print_error_prefix();
+	ft_printf("could not open file: %s\n", path);
+}
 
-#endif
+void	parser_error_invalid_extension(const char *path)
+{
+	print_error_prefix();
+	ft_printf("invalid file extension (expected .cub): %s\n", path);
+}
