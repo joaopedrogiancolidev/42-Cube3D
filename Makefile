@@ -9,14 +9,17 @@ LIBFT := $(LIBFT_DIR)/libft.a
 LIBPRINTF := $(PRINTF_DIR)/libftprintf.a
 OBJDIR  := obj
 
-HEADERS := -I ./include -I $(LIBMLX)/include -I ./src/Parser/includes -I $(LIBFT_DIR) -I $(PRINTF_DIR)/includes
+SRCDIR  := cube3d/src
+INCDIR  := cube3d/include
+
+HEADERS := -I ./$(INCDIR) -I $(LIBMLX)/include -I ./$(SRCDIR)/Parser/includes -I $(LIBFT_DIR) -I $(PRINTF_DIR)/includes
 LIBS    := $(LIBMLX)/build/libmlx42.a $(LIBFT) $(LIBPRINTF) -ldl -lglfw -pthread -lm
 
-SRCS_CORE := $(shell find src -type f -name "*.c" ! -path "src/Parser/*")
-SRCS_PARSER := $(shell find src/Parser/src/parsing -type f -name "*.c")
+SRCS_CORE := $(shell find $(SRCDIR) -type f -name "*.c" ! -path "$(SRCDIR)/Parser/*")
+SRCS_PARSER := $(shell find $(SRCDIR)/Parser/src/parsing -type f -name "*.c")
 SRCS    := $(SRCS_CORE) $(SRCS_PARSER)
 
-OBJS    := $(SRCS:src/%.c=$(OBJDIR)/%.o)
+OBJS    := $(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 all: libs libmlx $(NAME)
 
 libs:
@@ -29,7 +32,7 @@ libmlx:
 	fi
 	@cmake --build $(LIBMLX)/build -j4
 
-$(OBJDIR)/%.o: src/%.c
+$(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) $(HEADERS) -c $< -o $@
 	@printf "Compiling: $(notdir $<)\n"
